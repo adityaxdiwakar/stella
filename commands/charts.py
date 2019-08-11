@@ -2,19 +2,24 @@ from urllib.parse import urlencode
 import discord
 import requests
 import io
+import os
 
-async def main(message):
+prefix = os.getenv("BOT_PREFIX")
+
+async def main(message, canary=False):
+    if canary == True:
+        premsg = "**[Canary]** "
     try:
-        chart_type = message.content[2] #the third id
+        chart_type = message.content[len(prefix) + 1] #the third id
         if chart_type == " ":
             chart_type = 5
         chart_type = int(chart_type)
     except ValueError:
-        await message.channel.send("Something went wrong with your request, check the command try again!")
+        await message.channel.send(premsg + "Something went wrong with your request, check the command try again!")
         return
 
     if chart_type > 7 or chart_type < 0:
-        await message.channel.send("You asked for a chart type that we don't have, check the bot command channel for help!")
+        await message.channel.send(premsg + "You asked for a chart type that we don't have, check the bot command channel for help!")
         return
 
     timeframes = ["i1", "i3", "i5", "i15", "i30", "d", "w", "m"]
@@ -22,7 +27,7 @@ async def main(message):
     
     message_split = message.content.split(" ")
     if len(message_split) < 2:
-        await message.channel.send("Sorry, couldn't identify your ticker! Try again!")
+        await message.channel.send(premsg + "Sorry, couldn't identify your ticker! Try again!")
         return
 
     ticker = message_split[1]
@@ -46,5 +51,5 @@ async def main(message):
 
     file = requests.get(f"{root_url}?{qstr}")
 
-    await message.channel.send(f"Alright, here's your {timeframe_names[chart_type]} chart:", file=discord.File(io.BytesIO(file.content), "chart.png"))
+    await message.channel.send(premsg + f"Alright, here's your {timeframe_names[chart_type]} chart:", file=discord.File(io.BytesIO(file.content), "chart.png"))
 

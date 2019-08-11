@@ -3,6 +3,9 @@ import os
 
 load_dotenv() #grab env variables from config
 
+prefix = os.getenv("BOT_PREFIX")
+is_dev = bool(os.getenv("IS_DEV"))
+
 from commands import ping
 from commands import charts
 
@@ -16,19 +19,19 @@ class Stella(discord.Client):
 
     async def on_message(self, message):
         message.content = message.content.lower()
-        if message.content.startswith("?"):
-            if message.content[1] == " ":
+        if message.content.startswith(f"{prefix}"):
+            if message.content[len(prefix)] == " ":
                 char_array = list(message.content)
-                del char_array[1]
+                del char_array[len(prefix)]
                 message.content = ""
                 for char in char_array:
                     message.content += char
 
-            if message.content.startswith("?ping"):
-                await ping.main(message)
+            if message.content.startswith(f"{prefix}ping"):
+                await ping.main(message, canary=is_dev)
 
-            elif message.content.startswith("?c"):
-                await charts.main(message)
+            elif message.content.startswith(f"{prefix}c"):
+                await charts.main(message, canary=is_dev)
                 
         
 ctx = Stella()
