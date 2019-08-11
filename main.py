@@ -4,7 +4,7 @@ import os
 load_dotenv() #grab env variables from config
 
 prefix = os.getenv("BOT_PREFIX")
-is_dev = bool(os.getenv("IS_DEV"))
+is_dev = bool(int(os.getenv("IS_DEV")))
 
 from commands import ping
 from commands import charts

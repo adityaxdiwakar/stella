@@ -2,6 +2,8 @@ from datetime import datetime
 import time
 
 async def main(message, canary=False):
+    premsgs = ["**[Canary]** ", " "]
+    premsg = premsgs[not canary]
     if canary == True:
         premsg = "**[Canary]** "
     msg = await message.channel.send(premsg + f":ping_pong: Calculating ping...")

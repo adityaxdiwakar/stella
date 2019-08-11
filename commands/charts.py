@@ -7,8 +7,8 @@ import os
 prefix = os.getenv("BOT_PREFIX")
 
 async def main(message, canary=False):
-    if canary == True:
-        premsg = "**[Canary]** "
+    premsgs = ["**[Canary]** ", " "]
+    premsg = premsgs[not canary]
     try:
         chart_type = message.content[len(prefix) + 1] #the third id
         if chart_type == " ":
