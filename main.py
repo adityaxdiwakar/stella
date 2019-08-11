@@ -16,10 +16,10 @@ class Stella(discord.Client):
 
     async def on_message(self, message):
         if message.content.startswith("?"):
-                if message.content.startswith("?ping"):
+                if message.content.lower().startswith("?ping"):
                     await ping.main(message)
 
-                elif message.content.startswith("?c"):
+                elif message.content.lower().startswith("?c"):
                     await charts.main(message)
                     
         
