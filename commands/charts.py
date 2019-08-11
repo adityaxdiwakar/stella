@@ -36,8 +36,11 @@ async def main(message):
     }
 
     root_url = "https://elite.finviz.com/chart.ashx"
-    if chart_type > 4:
+    if chart_type > 4 and chart_type != 5:
         root_url = "https://finviz.com/chart.ashx"
+
+    if chart_type == 5:
+        query["ta"] = "st_c,sch_200p,sma_50,sma_200,sma_20,sma_100,bb_20_2,rsi_b_14,macd_b_12_26_9,stofu_b_14_3_3"
 
     qstr = urlencode(query)
 
