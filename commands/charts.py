@@ -6,7 +6,6 @@ import io
 async def main(message):
     try:
         chart_type = message.content[2] #the third id
-        print(chart_type)
         if chart_type == " ":
             chart_type = 5
         chart_type = int(chart_type)
@@ -17,7 +16,7 @@ async def main(message):
     if chart_type > 7 or chart_type < 0:
         await message.channel.send("You asked for a chart type that we don't have, check the bot command channel for help!")
         return
-    
+
     timeframes = ["i1", "i3", "i5", "i15", "i30", "d", "w", "m"]
     timeframe_names = ["1 minute intraday", "3 minute intraday", "5 minute intraday", "15 minute intraday", "30 minute intraday", "daily", "weekly", "monthly"]
     
