@@ -18,13 +18,15 @@ async def main(message, canary=False):
         await message.channel.send(premsg + "Something went wrong with your request, check the command try again!")
         return
 
-    if chart_type > 3 or chart_type < 1:
+    if chart_type > 4 or chart_type < 1:
         await message.channel.send(premsg + "You asked for a chart type that we don't have, check the bot command channel for help!")
         return
 
+    chart_type -= 1
+
     timeframes = ["m5", "d1", "w1", "m1"]
     timeframe_names = ["5 minute", "daily", "weekly", "monthly"]
-    
+
     message_split = message.content.split(" ")
     if len(message_split) < 2:
         await message.channel.send(premsg + "Sorry, couldn't identify your ticker! Try again!")
@@ -34,7 +36,7 @@ async def main(message, canary=False):
 
     query = {
         "t": ticker,
-        "p": timeframes[chart_type - 1],
+        "p": timeframes[chart_type],
         "s": "l"
     }
 
