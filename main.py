@@ -19,12 +19,13 @@ import time
 import asyncio
 
 async def status():
-    r = requests.get("https://www.investing.com/indices/us-spx-500-futures",  headers={'User-Agent': 'Mozilla/5.0'})
-    soup = BeautifulSoup(r.content, 'html.parser')
-    last_price = soup.find(id="last_last").string
-    activity = discord.Activity(name=f"/ES @ {last_price}", type=3)
-    await ctx.change_presence(activity=activity, status=discord.Status.idle)
-    await asyncio.sleep(60)
+    while True:
+        r = requests.get("https://www.investing.com/indices/us-spx-500-futures",  headers={'User-Agent': 'Mozilla/5.0'})
+        soup = BeautifulSoup(r.content, 'html.parser')
+        last_price = soup.find(id="last_last").string
+        activity = discord.Activity(name=f"/ES @ {last_price}", type=3)
+        await ctx.change_presence(activity=activity, status=discord.Status.idle)
+        await asyncio.sleep(60)
 
 class Stella(discord.Client):
     async def on_ready(self):
