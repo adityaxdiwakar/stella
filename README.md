@@ -9,7 +9,7 @@ Stella is a Discord Bot intended for the Stock Market Live Chat, it uses a combi
 
 Our ping command is quite simple, run it using ``?ping``. You will be returned a simple response with the roundtrip time for the WS/API timing. This is extraneous and used to measure the health of the Bot/Discord servers.
 
-### Charting commands
+### Charting commands for equities
 
 The charting command is encompassed in ``?c``.
 
@@ -30,9 +30,27 @@ These numbers can be appended to the command above, for example: ``?c2`` will br
 
 By default, ``?c`` brings up a daily chart.
 
+
+### Charting commands for futures
+
+The charting command for futures is encompassed in ``?f``.
+
+#### Level System
+
+The bot is equipped with a simple "level" system for the charting command:
+
+1. 5 Minute
+2. Daily
+3. Weekly
+4. Monthly
+
+These numbers can be appended to the command above, for example: ``?f2`` will bring up a daily futures chart.
+
+By default, ``?f`` brings up a 5 minute chart.
+
 #### Usage
 
-Use the command as: ``?c<level> <ticker>``. If the level is blank, the default will be used. Refer to the levels from above.
+Use the command as: ``?f<level> <futures ticker>``. If the level is blank, the default will be used. Refer to the levels from above.
 
 ## Support
 
