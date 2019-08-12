@@ -24,8 +24,8 @@ async def status():
         soup = BeautifulSoup(r.content, 'html.parser')
         last_price = soup.find(id="last_last").string
         activity = discord.Activity(name=f"/ES @ {last_price}", type=3)
-        await ctx.change_presence(activity=activity, status=discord.Status.idle)
-        await asyncio.sleep(15)
+        await ctx.change_presence(activity=activity)
+        await asyncio.sleep(30)
 
 class Stella(discord.Client):
     async def on_ready(self):
