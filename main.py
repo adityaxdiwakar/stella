@@ -1,4 +1,6 @@
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+import requests
 import os
 
 load_dotenv() #grab env variables from config
@@ -14,10 +16,20 @@ from commands import fxcharts
 import copy
 import discord
 import time
+import asyncio
+
+async def status():
+    r = requests.get("https://www.investing.com/indices/us-spx-500-futures",  headers={'User-Agent': 'Mozilla/5.0'})
+    soup = BeautifulSoup(r.content, 'html.parser')
+    last_price = soup.find(id="last_last").string
+    activity = discord.Activity(name=f"/ES @ {last_price}", type=3)
+    await ctx.change_presence(activity=activity, status=discord.Status.idle)
+    await asyncio.sleep(60)
 
 class Stella(discord.Client):
     async def on_ready(self):
         print('Logged on as', self.user)
+        ctx.loop.create_task(status())
 
     async def on_message(self, message):
         message.content = message.content.lower()
