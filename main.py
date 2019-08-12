@@ -9,6 +9,7 @@ is_dev = bool(int(os.getenv("IS_DEV")))
 from commands import ping
 from commands import charts
 from commands import futcharts
+from commands import fxcharts
 
 import copy
 import discord
@@ -36,6 +37,9 @@ class Stella(discord.Client):
 
             elif message.content.startswith(f"{prefix}f"):
                 await futcharts.main(message, canary=is_dev)
+
+            elif message.content.startswith(f"{prefix}x"):
+                await fxcharts.main(message, canary=is_dev)
 
 ctx = Stella()
 ctx.run(os.getenv("BOT_TOKEN"))
