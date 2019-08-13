@@ -21,7 +21,8 @@ import asyncio
 async def status():
     counter = 0
     links = ["https://www.investing.com/commodities/gold", "https://www.investing.com/indices/us-spx-500-futures"]
-    tickers = ["GC", "ES"]
+    links = [links[1], links1[1], links[1], links[0]]
+    tickers = ["ES", "ES,", "ES", "GC"]
     while True:
         r = requests.get(links[counter % 2],  headers={'User-Agent': 'Mozilla/5.0'})
         soup = BeautifulSoup(r.content, 'html.parser')
@@ -36,7 +37,7 @@ async def status():
         activity = discord.Activity(name=f"{ticker}: {last_price} ({price_change} {price_percent})", type=0)
         await ctx.change_presence(activity=activity)
         counter += 1
-        await asyncio.sleep(12)
+        await asyncio.sleep(15)
 
 class Stella(discord.Client):
     async def on_ready(self):
