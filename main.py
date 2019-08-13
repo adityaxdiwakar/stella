@@ -36,7 +36,7 @@ async def status():
         activity = discord.Activity(name=f"{ticker}: {last_price} ({price_change} {price_percent})", type=0)
         await ctx.change_presence(activity=activity)
         counter += 1
-        await asyncio.sleep(10)
+        await asyncio.sleep(12)
 
 class Stella(discord.Client):
     async def on_ready(self):
