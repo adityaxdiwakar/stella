@@ -46,5 +46,9 @@ async def main(message, canary=False):
 
     file = requests.get(f"{root_url}?{qstr}")
 
+    if len(file.content) == 0:
+        await message.channel.send(premsg + f"Chart not found! An error occured, try again. If you need cash market equities, use ``?c``.")
+        return
+
     await message.channel.send(premsg + f"Alright, here's your {timeframe_names[chart_type]} chart:", file=discord.File(io.BytesIO(file.content), "chart.png"))
 

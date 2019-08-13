@@ -24,7 +24,7 @@ async def main(message, canary=False):
 
     timeframes = ["i1", "i3", "i5", "i15", "i30", "d", "w", "m"]
     timeframe_names = ["1 minute intraday", "3 minute intraday", "5 minute intraday", "15 minute intraday", "30 minute intraday", "daily", "weekly", "monthly"]
-    
+
     message_split = message.content.split(" ")
     if len(message_split) < 2:
         await message.channel.send(premsg + "Sorry, couldn't identify your ticker! Try again!")
@@ -50,6 +50,9 @@ async def main(message, canary=False):
     qstr = urlencode(query)
 
     file = requests.get(f"{root_url}?{qstr}")
+
+    if len(file.content) == 0:
+        await message.channel.send(premsg + f"Chart not found! An error occured, try again. If you need futures, use ``?f``.")
 
     await message.channel.send(premsg + f"Alright, here's your {timeframe_names[chart_type]} chart:", file=discord.File(io.BytesIO(file.content), "chart.png"))
 
