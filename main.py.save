@@ -21,19 +21,18 @@ import asyncio
 async def status():
     counter = 0
     links = ["https://www.investing.com/commodities/gold", "https://www.investing.com/indices/us-spx-500-futures"]
-    tickers = ["GC", "ES"]
+    tickers = ["/GC", "/ES"]
     while True:
         r = requests.get(links[counter % 2],  headers={'User-Agent': 'Mozilla/5.0'})
         soup = BeautifulSoup(r.content, 'html.parser')
         last_price_obj = soup.find(id="last_last")
-        prices = [str(div.string).strip() for div in last_price_obj.parent]
-        prices = [div for div in prices if div != ""]
+        prices = [str(div.string).strip() for div in last_price_obj.pare
+        print(prices)
         last_price = prices[0]
-        last_price = float(prices[0].replace(",", ""))
         price_change = prices[1]
         price_percent = prices[2][1:]
         ticker = tickers[counter % 2]
-        activity = discord.Activity(name=f"{ticker}: {last_price} ({price_change} {price_percent})", type=0)
+        activity = discord.Activity(name=f"{ticker} @ {last_price} ({price_change} {price_percent})", type=3)
         await ctx.change_presence(activity=activity)
         counter += 1
         await asyncio.sleep(10)
