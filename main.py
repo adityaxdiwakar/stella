@@ -15,16 +15,15 @@ from commands import fxcharts
 
 import copy
 import discord
-import time
+	import time
 import asyncio
 
 async def status():
     counter = 0
-    links = ["https://www.investing.com/commodities/gold", "https://www.investing.com/indices/us-spx-500-futures"]
-    links = [links[1], links1[1], links[1], links[0]]
-    tickers = ["ES", "ES,", "ES", "GC"]
+    links = ["https://www.investing.com/commodities/gold", "https://www.investing.com/indices/us-spx-500-futures", "https://www.investing.com/indices/us-spx-500-futures", "https://www.investing.com/indices/us-spx-500-futures"]
+    tickers = ["GC", "ES", "ES", "ES"]
     while True:
-        r = requests.get(links[counter % 2],  headers={'User-Agent': 'Mozilla/5.0'})
+        r = requests.get(links[counter % len(links)],  headers={'User-Agent': 'Mozilla/5.0'})
         soup = BeautifulSoup(r.content, 'html.parser')
         last_price_obj = soup.find(id="last_last")
         prices = [str(div.string).strip() for div in last_price_obj.parent]
@@ -33,7 +32,7 @@ async def status():
         last_price = float(prices[0].replace(",", ""))
         price_change = prices[1]
         price_percent = prices[2][1:]
-        ticker = tickers[counter % 2]
+        ticker = tickers[counter % len(links)]
         activity = discord.Activity(name=f"{ticker}: {last_price} ({price_change} {price_percent})", type=0)
         await ctx.change_presence(activity=activity)
         counter += 1
