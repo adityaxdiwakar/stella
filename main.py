@@ -15,7 +15,7 @@ from commands import fxcharts
 
 import copy
 import discord
-	import time
+import time
 import asyncio
 
 async def status():
