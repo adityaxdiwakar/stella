@@ -40,9 +40,10 @@ The charting command for futures is encompassed in ``?f``.
 The bot is equipped with a simple "level" system for the charting command:
 
 1. 5 Minute
-2. Daily
-3. Weekly
-4. Monthly
+2. Hourly
+3. Daily
+4. Weekly
+5. Monthly
 
 These numbers can be appended to the command above, for example: ``?f2`` will bring up a daily futures chart.
 
