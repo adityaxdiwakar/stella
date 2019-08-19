@@ -12,6 +12,7 @@ from commands import ping
 from commands import charts
 from commands import futcharts
 from commands import fxcharts
+from commands import refs
 
 import copy
 import discord
@@ -64,6 +65,9 @@ class Stella(discord.Client):
 
             elif message.content.startswith(f"{prefix}x"):
                 await fxcharts.main(message, canary=is_dev)
+            
+            elif message.content.startswith(f"{prefix}bearish"):
+                await refs.bearish(message, canary=is_dev)
 
 ctx = Stella()
 ctx.run(os.getenv("BOT_TOKEN"))
