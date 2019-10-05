@@ -21,8 +21,8 @@ def main():
         fig.update_layout(template="plotly_dark", title="All Report Charts", width=3840, height=2160)
 
         rn = time.time()
-        fig.write_image(f"{os.getenv('sys_file_location')}/{rn}.jpeg")
+        fig.write_image(f"{os.getenv('SYS_FILE_LOCATION')}/{rn}.jpeg")
 
-        return f"{os.getenv('file_location')}/{rn}.jpeg"
+        return f"{os.getenv('FILE_LOCATION')}/{rn}.jpeg"
     except Exception as e:
         return f"```\n{e}\n```"
