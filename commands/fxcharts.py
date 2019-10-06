@@ -3,6 +3,7 @@ import discord
 import requests
 import io
 import os
+import time
 
 prefix = os.getenv("BOT_PREFIX")
 
@@ -34,6 +35,7 @@ async def main(message, canary=False):
 
     ticker = message_split[1]
 
+
     currencies = ["EURUSD", "GBPUSD", "USDJPY", "USDCAD", "USDCHF", "AUDUSD", "NZDUSD", "EURGBP", "GBPJPY", "BTCUSD"]
     if ticker.upper() not in currencies:
         reply = "Hey, I'm sorry but I can only do the following tickers:"
@@ -42,10 +44,19 @@ async def main(message, canary=False):
         await message.channel.send(premsg + reply)
         return
 
-    root_url = "https://finviz.com/fx_image.ashx"
+    msg = await message.channel.send(premsg + "Grabbing chart, stand by.")
 
-    timeframe = timeframes[chart_type]
-    file = requests.get(f"{root_url}?{ticker}_{timeframe}_l.png")
+    try:
+        root_url = "https://finviz.com/fx_image.ashx"
 
-    await message.channel.send(premsg + f"Alright, here's your {timeframe_names[chart_type]} chart:", file=discord.File(io.BytesIO(file.content), "chart.png"))
+        timeframe = timeframes[chart_type]
+        file = requests.get(f"{root_url}?{ticker}_{timeframe}_l.png")
 
+        rn = round(time.time())
+        with open(f"/var/www/html/u/fx/{rn}.png", "wb") as f:
+            f.write(file.content)
+
+        await message.channel.send(premsg + f"Alright, here's your {timeframe_names[chart_type]} chart: https://img.adi.wtf/fx/{rn}.png")
+
+    except Exception as e:
+        await msg.edit(content=f"Something went wrong, contact <@192696739981950976> with ```{e}```")

@@ -3,6 +3,7 @@ import discord
 import requests
 import io
 import os
+import time
 
 prefix = os.getenv("BOT_PREFIX")
 
@@ -32,23 +33,33 @@ async def main(message, canary=False):
         await message.channel.send(premsg + "Sorry, couldn't identify your ticker! Try again!")
         return
 
-    ticker = message_split[1]
+    msg = await message.channel.send(premsg + "Grabbing chart, stand by.")
 
-    query = {
-        "t": ticker,
-        "p": timeframes[chart_type],
-        "s": "l"
-    }
+    try:
+        ticker = message_split[1]
 
-    root_url = "https://finviz.com/fut_chart.ashx"
+        query = {
+            "t": ticker,
+            "p": timeframes[chart_type],
+            "s": "l"
+        }
 
-    qstr = urlencode(query)
+        root_url = "https://finviz.com/fut_chart.ashx"
 
-    file = requests.get(f"{root_url}?{qstr}")
+        qstr = urlencode(query)
 
-    if len(file.content) == 0:
-        await message.channel.send(premsg + f"Chart not found! An error occured, try again. If you need cash market equities, use ``?c``.")
-        return
+        file = requests.get(f"{root_url}?{qstr}")
 
-    await message.channel.send(premsg + f"Alright, here's your {timeframe_names[chart_type]} chart:", file=discord.File(io.BytesIO(file.content), "chart.png"))
+        rn = round(time.time())
 
+        if len(file.content) == 0:
+            await message.edit(content=premsg + f"Chart not found! An error occured, try again. If you need cash market equities, use ``?c``.")
+            return
+
+        with open(f"/var/www/html/u/fc/{rn}.png", "wb") as f:
+            f.write(file.content)
+
+        await msg.edit(premsg + f"Alright, here's your {timeframe_names[chart_type]} chart: https://img.adi.wtf/fc/{rn}.png")
+
+    except Exception as e:
+        await msg.edit(content=f"Something went wrong, contact <@192696739981950976> with ```{e}```")
