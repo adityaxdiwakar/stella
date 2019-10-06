@@ -3,6 +3,7 @@ import discord
 import requests
 import io
 import os
+import time
 
 prefix = os.getenv("BOT_PREFIX")
 
@@ -32,27 +33,38 @@ async def main(message, canary=False):
 
     ticker = message_split[1]
 
-    query = {
-        "t": ticker,
-        "ty": "c",
-        "ta": str(int(chart_type < 6)),
-        "p": timeframes[chart_type],
-        "s": "l"
-    }
+    msg = await message.channel.send(premsg + "Grabbing chart, stand by.")
 
-    root_url = "https://elite.finviz.com/chart.ashx"
-    if chart_type > 4 and chart_type != 5:
-        root_url = "https://finviz.com/chart.ashx"
+    try:
+        query = {
+            "t": ticker,
+            "ty": "c",
+            "ta": str(int(chart_type < 6)),
+            "p": timeframes[chart_type],
+            "s": "l"
+        }
 
-    if chart_type == 5:
-        query["ta"] = "st_c,sch_200p,sma_50,sma_200,sma_20,sma_100,bb_20_2,rsi_b_14,macd_b_12_26_9,stofu_b_14_3_3"
+        root_url = "https://elite.finviz.com/chart.ashx"
+        if chart_type > 4 and chart_type != 5:
+            root_url = "https://finviz.com/chart.ashx"
 
-    qstr = urlencode(query)
+        if chart_type == 5:
+            query["ta"] = "st_c,sch_200p,sma_50,sma_200,sma_20,sma_100,bb_20_2,rsi_b_14,macd_b_12_26_9,stofu_b_14_3_3"
 
-    file = requests.get(f"{root_url}?{qstr}")
+        qstr = urlencode(query)
 
-    if len(file.content) == 0:
-        await message.channel.send(premsg + f"Chart not found! An error occured, try again. If you need futures, use ``?f``.")
+        file = requests.get(f"{root_url}?{qstr}")
 
-    await message.channel.send(premsg + f"Alright, here's your {timeframe_names[chart_type]} chart:", file=discord.File(io.BytesIO(file.content), "chart.png"))
+        rn = round(time.time())
 
+        if len(file.content) == 0:
+            await msg.edit(content=premsg + f"Chart not found! An error occured, try again. If you need futures, use ``?f``.")
+            return
+
+        with open(f"/var/www/html/u/ca/{rn}.png", "wb") as f:
+            f.write(file.content)
+
+        await msg.edit(content=premsg + f"Alright, here's your {timeframe_names[chart_type]} chart: https://img.adi.wtf/ca/{rn}.png")
+
+    except Exception as e:
+        await msg.edit(content=f"Something went wrong, contact <@192696739981950976> with ```{e}```")
