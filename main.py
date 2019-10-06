@@ -14,6 +14,7 @@ from commands import futcharts
 from commands import fxcharts
 from commands import refs
 from commands import ng_all
+from commands import ng_rep
 
 import copy
 import discord
@@ -75,6 +76,9 @@ class Stella(discord.Client):
 
             elif message.content.startswith(f"{prefix}ngall"):
                 await ng_all.main(message, canary=is_dev)
+
+            elif message.content.startswith(f"{prefix}r"):
+                await ng_rep.main(message, canary=is_dev)
 
 ctx = Stella()
 ctx.run(os.getenv("BOT_TOKEN"))
