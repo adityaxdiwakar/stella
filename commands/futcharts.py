@@ -59,7 +59,7 @@ async def main(message, canary=False):
         with open(f"/var/www/html/u/fc/{rn}.png", "wb") as f:
             f.write(file.content)
 
-        await msg.edit(premsg + f"Alright, here's your {timeframe_names[chart_type]} chart: https://img.adi.wtf/fc/{rn}.png")
+        await msg.edit(content=premsg + f"Alright, here's your {timeframe_names[chart_type]} chart: https://img.adi.wtf/fc/{rn}.png")
 
     except Exception as e:
         await msg.edit(content=f"Something went wrong, contact <@192696739981950976> with ```{e}```")
