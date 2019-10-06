@@ -80,5 +80,7 @@ class Stella(discord.Client):
             elif message.content.startswith(f"{prefix}r"):
                 await ng_rep.main(message, canary=is_dev)
 
+            elif message.content.startswith(f"{prefix}anom"):
+                await ng_rep.all_anom(message, canary=is_dev)
 ctx = Stella()
 ctx.run(os.getenv("BOT_TOKEN"))
