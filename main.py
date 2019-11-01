@@ -85,5 +85,19 @@ class Stella(discord.Client):
 
             elif message.content.startswith(f"{prefix}r"):
                 await ng_rep.main(message, canary=is_dev)
+
+            elif message.content.startswith(f"{prefix}eval"):
+                if message.author.id == 192696739981950976:
+                    command = " ".join(message.content.split(" ")[1:])
+                    try:
+                        resp = eval(command)
+                    except Exception as e:
+                        resp = e
+
+                    msg = f"```{resp}```"
+                    await message.channel.send(msg)
+                else:
+                    await message.channel.send(":lock: You do not have permission to evaluate in runtime!")
+
 ctx = Stella()
 ctx.run(os.getenv("BOT_TOKEN"))

@@ -20,7 +20,10 @@ async def main(message, canary=False):
         return
     msg = await message.channel.send(premsg + "Generating chart, stand by.")
     chart_link = sr.main(report_type)
-    await msg.edit(content=premsg + f"Here you go: {chart_link}")
+    if chart_link[1] == None:
+        await msg.edit(content=premsg + f"An error occured: {chart_link[0]}")
+        return
+    await msg.edit(content=premsg + f"{chart_link[0]} with an addition of **{chart_link[1]}** FoF and **{chart_link[2]}** over 30yr avg.")
 
 
 async def all_anom(message, canary=False):
