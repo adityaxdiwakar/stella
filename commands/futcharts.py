@@ -53,9 +53,10 @@ async def main(message, canary=False):
         rn = round(time.time())
 
         if len(file.content) == 0:
-            await message.edit(content=premsg + f"Chart not found! An error occured, try again. If you need cash market equities, use ``?c``.")
+            await msg.edit(content=premsg + f"Chart not found! An error occured, try again. If you need cash market equities, use ``?c``.")
             return
 
+        
         with open(f"/var/www/html/u/fc/{rn}.png", "wb") as f:
             f.write(file.content)
 
