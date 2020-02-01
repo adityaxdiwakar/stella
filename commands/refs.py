@@ -3,6 +3,10 @@ import json
 async def add_ref(message, canary=False):
     premsg = ["**[Canary]** ", " "][not canary]
     
+    if message.author.id != "":
+        await message.channel.send(premsg + "🔑 Sorry! You are not allowed to create tags.")
+        return
+
     if len(message.content.split(" ")) < 3:
         await message.channel.send(premsg + "Please enter an actual tag to be added!")
         return
