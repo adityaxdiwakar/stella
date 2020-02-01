@@ -14,7 +14,7 @@ async def main(message, canary=False):
         return
 
     try:
-        report_type = {"gfs": "gfs", "gefs": "gfs-ensemble", "ecmwf": "ecmwf", "eps": "ecmwf-ensemble"}[message_split[1]]
+        report_type = {"gfs": "gfs", "gefs": "gfs-ensemble", "ecmwf": "ecmwf", "eps": "ecmwf-ensemble", "ecmwfw":  "ecmwf-weeklies"}[message_split[1]]
     except:
         await message.channel.send(premsg + "Sorry, your report type could not be interpreted")
         return
@@ -36,7 +36,7 @@ async def all_anom(message, canary=False):
         return
 
     try:
-        report_type = {"gfs": "gfs", "gefs": "gfs-ensemble", "emcwf": "emwf", "eps": "ecmwf-ensemble"}[message_split[1]]
+        report_type = {"gfs": "gfs", "gefs": "gfs-ensemble", "emcwf": "emwf", "eps": "ecmwf-ensemble", "ecmwfw": "ecmwf-weeklies"}[message_split[1]]
     except:
         await message.channel.send(premsg + "Sorry, your report type could not be interpreted")
         return
@@ -57,10 +57,10 @@ async def custom(message, canary=False):
 
     for x in range(len(feed_forward)):
         item = feed_forward[x]
-        if item.split("@")[0] not in ["gfs", "gefs", "eps", "ecmwf"]:
+        if item.split("@")[0] not in ["gfs", "gefs", "eps", "ecmwf", "ecmwfw"]:
             await message.channel.send(premsg + "Sorry, you entered an invalid report type")
             return
-        beginning = {"gfs": "gfs", "ecmwf": "ecmwf", "eps": "ecmwf-ensemble", "gefs": "gfs-ensemble"}[item.split("@")[0]]
+        beginning = {"gfs": "gfs", "ecmwf": "ecmwf", "eps": "ecmwf-ensemble", "gefs": "gfs-ensemble", "ecmwfw": "ecmwf-weeklies"}[item.split("@")[0]]
         feed_forward[x] = f"{beginning}@{item.split('@')[1]}"
 
     msg = await message.channel.send(premsg + "Generating chart, stand by.")

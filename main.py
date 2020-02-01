@@ -20,11 +20,22 @@ import copy
 import discord
 import time
 import asyncio
+import ast
+
+def exec_then_eval(code):
+    block = ast.parse(code, mode='exec')
+
+    # assumes last node is an expression
+    last = ast.Expression(block.body.pop().value)
+
+    _globals, _locals = {}, {}
+    exec(compile(block, '<string>', mode='exec'), _globals, _locals)
+    return eval(compile(last, '<string>', mode='eval'), _globals, _locals)
 
 async def status():
     counter = 0
-    links = ["https://www.investing.com/commodities/gold", "https://www.investing.com/indices/us-spx-500-futures", "https://www.investing.com/indices/us-spx-500-futures", "https://www.investing.com/indices/us-spx-500-futures"]
-    tickers = ["GC", "ES", "ES", "ES"]
+    links = ["https://www.investing.com/indices/us-spx-500-futures", "https://www.investing.com/indices/us-spx-500-futures", "https://www.investing.com/indices/us-spx-500-futures", "https://www.investing.com/indices/us-spx-500-futures"]
+    tickers = ["ES", "ES", "ES", "ES"]
     while True:
         r = requests.get(links[counter % len(links)],  headers={'User-Agent': 'Mozilla/5.0'})
         soup = BeautifulSoup(r.content, 'html.parser')
@@ -59,6 +70,9 @@ class Stella(discord.Client):
             if message.content.startswith(f"{prefix}ping"):
                 await ping.main(message, canary=is_dev)
 
+            elif message.content.startswith(f"{prefix}cj"):
+                await refs.cj(message, canary=is_dev)
+
             elif message.content.startswith(f"{prefix}c"):
                 await charts.main(message, canary=is_dev)
 
@@ -71,8 +85,14 @@ class Stella(discord.Client):
             elif message.content.startswith(f"{prefix}bearish"):
                 await refs.bearish(message, canary=is_dev)
 
+            elif message.content.startswith(f"{prefix}gold"):
+                await refs.gold(message, canary=is_dev)
+
             elif message.content.startswith(f"{prefix}tradewar"):
                 await refs.tradewar(message, canary=is_dev)
+
+            elif message.content.startswith(f"{prefix}uhoh"):
+               await refs.uhoh(message, canary=is_dev)
 
             elif message.content.startswith(f"{prefix}ngall"):
                 await ng_all.main(message, canary=is_dev)
@@ -87,8 +107,9 @@ class Stella(discord.Client):
                 await ng_rep.main(message, canary=is_dev)
 
             elif message.content.startswith(f"{prefix}eval"):
-                if message.author.id == 192696739981950976:
+                if message.author.id == 192696739981950976 or message.author.id == 513549665019363329:
                     command = " ".join(message.content.split(" ")[1:])
+                    print(command)
                     try:
                         resp = eval(command)
                     except Exception as e:
