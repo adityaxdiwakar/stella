@@ -3,7 +3,7 @@ import json
 async def add_ref(message, canary=False):
     premsg = ["**[Canary]** ", " "][not canary]
     
-    if message.author.id != "192696739981950976":
+    if message.author.id != 192696739981950976:
         await message.channel.send(premsg + "🔑 Sorry! You are not allowed to create tags.")
         return
 
