@@ -35,7 +35,7 @@ async def company(message, canary=False):
     embed = discord.Embed(title=ticker.upper(), description=f"{company_name} Earnings ({whisper_box_children[2]})")
     embed.add_field(name="Reporting Date", value=f"{date_box_children[1]} ({date_box_children[0]})", inline=True)
     embed.add_field(name="Reporting Time", value=date_box_children[2], inline=True)
-    embed.add_field(name="EW EPS", value=date_box_children[1], inline=True)
+    embed.add_field(name="EW EPS", value=whisper_box_children[1], inline=True)
     print(whisper_box_children[3].split(" "))
     embed.add_field(name="WS EPS", value=whisper_box_children[3].split(" ")[2], inline=True)
     embed.add_field(name="WS Revenue", value=" ".join(whisper_box_children[4].split(" ")[1:3]), inline=True)
