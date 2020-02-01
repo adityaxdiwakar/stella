@@ -15,6 +15,7 @@ from commands import fxcharts
 from commands import refs
 from commands import ng_all
 from commands import ng_rep
+from commands import earnings
 
 import copy
 import discord
@@ -105,6 +106,9 @@ class Stella(discord.Client):
 
             elif message.content.startswith(f"{prefix}r"):
                 await ng_rep.main(message, canary=is_dev)
+
+            elif message.content.startswith(f"{prefix}earnings"):
+                await earnings.company(message, canary=is_dev)
 
             elif message.content.startswith(f"{prefix}eval"):
                 if message.author.id == 192696739981950976 or message.author.id == 513549665019363329:
