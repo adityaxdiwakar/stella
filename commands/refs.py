@@ -1,20 +1,51 @@
-async def bearish(message, canary=False):
+import json
+
+async def add_ref(message, canary=False):
     premsg = ["**[Canary]** ", " "][not canary]
-    await message.channel.send(premsg + "Here you are: https://i.imgur.com/Fiua3bN.png")
+    
+    if len(message.content.split(" ")) < 3:
+        await message.channel.send(premsg + "Please enter an actual tag to be added!")
+        return
 
-async def tradewar(message, canary=False):
-    premsg = ["**[Canary]**", " "][not canary]
-    await message.channel.send(premsg + "Here you are: https://i.imgur.com/JXNlKXj.png")
+    tag_title = message.content.split(" ")[1]
+
+    tag_content = " ".join(message.content.split(" ")[2:])
+    
+    with open("bin/tags.json", "r") as f:
+        tags = json.load(f)
+
+    tags.update({tag_title: tag_content})
+
+    with open("bin/tags.json", "w") as f:
+        json.dump(tags, f, indent=4)
+
+    await message.channel.send(premsg + f"Awesome! The **{tag_title}** tag was added!")
+
+async def show_tags(message, canary=False):
+    premsg = ["**[Canary]** ", " "][not canary]
+
+    with open("bin/tags.json", "r") as f:
+        tags = json.load(f)
+
+    tags_str = ", ".join(list(tags.keys()))
+    
+    await message.channel.send(premsg + f"The current tags available for use are: ``{tags_str}``. Please only test in #bot-spam")
+
+async def use_tag(message, canary=False):
+    premsg = ["**[Canary]** ", " "][not canary]
+
+    with open("bin/tags.json", "r") as f:
+        tags = json.load(f)
 
 
-async def uhoh(message, canary=False):
-    premsg = ["**[Canary]**", " "][not canary]
-    await message.channel.send(premsg + "TOO MANY DIPS!!!! https://i.imgur.com/wIDyfUG.jpg")
+    if len(message.content.split(" ")) < 2:
+        await message.channel.send(premsg + "Please enter a tag name to run!")
+        return
 
-async def gold(message, canary=False):
-    premsg = ["**[Canary]**", " "][not canary]
-    await message.channel.send(premsg + "DONT SELL THE GOLD!!!! https://i.imgur.com/gGKcGCr.png")
+    tag_title = message.content.split(" ")[1]
 
-async def cj(message, canary=False):
-    premsg = ["**[Canary]**", " "][not canary]
-    await message.channel.send(premsg + "Here we go again... https://i.imgur.com/Yp2MI96.jpg")
+    if tag_title not in tags:
+        await message.channel.send(premsg + "Tag not found in the system, sorry! Run ``?showtags`` to see what tags are available.")
+        return
+
+    await message.channel.send(premsg + tags[tag_title])

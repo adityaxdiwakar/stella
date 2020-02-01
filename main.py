@@ -59,7 +59,7 @@ class Stella(discord.Client):
         ctx.loop.create_task(status())
 
     async def on_message(self, message):
-        message.content = message.content.lower()
+        message.content.split(" ")[0] = message.content.split(" ")[0].lower()
         if message.content.startswith(f"{prefix}"):
             if message.content[len(prefix)] == " ":
                 char_array = list(message.content)
@@ -109,6 +109,15 @@ class Stella(discord.Client):
 
             elif message.content.startswith(f"{prefix}earnings"):
                 await earnings.company(message, canary=is_dev)
+
+            elif message.content.startswith(f"{prefix}addtag"):
+                await refs.add_ref(message, canary=is_dev)
+
+            elif message.content.startswith(f"{prefix}showtags"):
+                await refs.show_tags(message, canary=is_dev)
+
+            elif message.content.startswith(f"{prefix}tag"):
+                await refs.use_tag(message, canary=is_dev)
 
             elif message.content.startswith(f"{prefix}eval"):
                 if message.author.id == 192696739981950976 or message.author.id == 513549665019363329:
