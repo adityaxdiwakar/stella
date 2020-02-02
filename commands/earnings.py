@@ -24,21 +24,39 @@ async def company(message, canary=False):
         await msg.edit(content=premsg + "Sorry, that company does not exist in the earnings database. Try again?")
         return
 
-    print(company_name)
-
     date_box_children = [child.text for child in date_box.children if child.text != ""]
-    print(date_box_children)
 
     whisper_box_children = [child.text for child in whisper_box.children if child.text != ""]
-    print(whisper_box_children)
 
     embed = discord.Embed(title=ticker.upper(), description=f"{company_name} Earnings ({whisper_box_children[2]})")
-    embed.add_field(name="Reporting Date", value=f"{date_box_children[1]} ({date_box_children[0]})", inline=True)
-    embed.add_field(name="Reporting Time", value=date_box_children[2], inline=True)
-    embed.add_field(name="EW EPS", value=whisper_box_children[1], inline=True)
-    print(whisper_box_children[3].split(" "))
-    embed.add_field(name="WS EPS", value=whisper_box_children[3].split(" ")[2], inline=True)
-    embed.add_field(name="WS Revenue", value=" ".join(whisper_box_children[4].split(" ")[1:3]), inline=True)
-
+    
+    try:
+        embed.add_field(name="Reporting Date", value=f"{date_box_children[1]} ({date_box_children[0]})", inline=True)
+    except:
+        embed.add_field(name="Reporting Date", value="N/A")
+    try:
+        embed.add_field(name="Reporting Time", value=date_box_children[2], inline=True)
+    except:
+        embed.add_field(name="Reporting Time", value="N/A")
+    try:
+        if whisper_box_children[1] == "$0.00":
+            whisper_box_children[1] == "N/A"
+        embed.add_field(name="EW EPS", value=whisper_box_children[1], inline=True)
+    except:
+        embed.add_field(name="EW EPS", value="N/A")
+    try:
+        value = whisper_box_children[3].split(" ")[2]
+        if value == "$0.00":
+            value = "N/A"
+        embed.add_field(name="WS EPS", value=value, inline=True)
+    except:
+        embed.add_field(name="WS EPS", value="N/A")
+    try:
+        value = " ".join(whisper_box_children[4].split(" ")[1:3])
+        if value == "$0.00 Mil":
+            value = "N/A"
+        embed.add_field(name="WS Revenue", value=value, inline=True)
+    except:
+        embed.add_field(name="WS Revenue", value="N/A")
 
     await msg.edit(content=premsg, embed=embed)
