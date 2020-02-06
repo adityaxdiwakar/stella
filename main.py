@@ -62,7 +62,7 @@ class Stella(discord.Client):
         dev_msg = "I am currently running in the **production** environment."
         if is_dev:
             dev_msg = "I am currently running in a **canary development** environment."
-        await channel.send(f"Stella has been rebooted. The current time is {datetime.datetime.now().ctime()}. {dev_msg}")
+        await channel.send(f"Stella has been rebooted. The current time is {datetime.datetime.now().strftime('%H:%M:%S on %b %d')}. {dev_msg}")
         ctx.loop.create_task(status())
 
     async def on_message(self, message):
