@@ -16,6 +16,7 @@ from commands import refs
 from commands import ng_all
 from commands import ng_rep
 from commands import earnings
+from commands import eightball
 
 import copy
 import discord
@@ -71,9 +72,6 @@ class Stella(discord.Client):
             if message.content.startswith(f"{prefix}ping"):
                 await ping.main(message, canary=is_dev)
 
-            elif message.content.startswith(f"{prefix}cj"):
-                await refs.cj(message, canary=is_dev)
-
             elif message.content.startswith(f"{prefix}c"):
                 await charts.main(message, canary=is_dev)
 
@@ -82,18 +80,6 @@ class Stella(discord.Client):
 
             elif message.content.startswith(f"{prefix}x"):
                 await fxcharts.main(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}bearish"):
-                await refs.bearish(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}gold"):
-                await refs.gold(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}tradewar"):
-                await refs.tradewar(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}uhoh"):
-               await refs.uhoh(message, canary=is_dev)
 
             elif message.content.startswith(f"{prefix}ngall"):
                 await ng_all.main(message, canary=is_dev)
@@ -112,6 +98,9 @@ class Stella(discord.Client):
 
             elif message.content.startswith(f"{prefix}addtag"):
                 await refs.add_ref(message, canary=is_dev)
+            
+            elif message.content.startswith(f"{prefix}8ball"):
+                await eightball.main(message, canary=is_dev)
 
             elif message.content.startswith(f"{prefix}showtags"):
                 await refs.show_tags(message, canary=is_dev)
