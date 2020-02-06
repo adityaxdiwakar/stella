@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+import datetime
 import requests
 import os
 
@@ -57,6 +58,11 @@ async def status():
 class Stella(discord.Client):
     async def on_ready(self):
         print('Logged on as', self.user)
+        channel = ctx.get_channel(636986005773352980)
+        dev_msg = "I am currently running in the **production** environment."
+        if is_dev:
+            dev_msg = "I am currently running in a **canary development** environment."
+        await channel.send(f"Stella has been rebooted. The current time is {datetime.datetime.now().ctime()}. {dev_msg}")
         ctx.loop.create_task(status())
 
     async def on_message(self, message):
