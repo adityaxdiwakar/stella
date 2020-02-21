@@ -18,6 +18,7 @@ from commands import ng_all
 from commands import ng_rep
 from commands import earnings
 from commands import eightball
+from commands import evalmod
 
 import copy
 import discord
@@ -55,6 +56,25 @@ async def status():
         counter += 1
         await asyncio.sleep(15)
 
+
+# {prefix: component}
+module_links = {
+    "ping": ping.main,
+    "c": charts.main,
+    "f": futcharts.main,
+    "x": fxcharts.main,
+    "ngall": ng_all.main,
+    "rc": ng_rep.custom,
+    "anom": ng_rep.all_anom,
+    "r": ng_rep.main,
+    "earnings": earnings.company,
+    "addtag": refs.add_ref,
+    "8ball": eightball.main,
+    "showtags": refs.show_tags,
+    "tag": refs.use_tag,
+    "eval": evalmod.main
+}
+
 class Stella(discord.Client):
     async def on_ready(self):
         print('Logged on as', self.user)
@@ -75,58 +95,11 @@ class Stella(discord.Client):
                 for char in char_array:
                     message.content += char
 
-            if message.content.startswith(f"{prefix}ping"):
-                await ping.main(message, canary=is_dev)
+        for mod in module_links:
+            if message.content.startswith(prefix + mod):
+                module_links[mod](message, canary=is_dev)
 
-            elif message.content.startswith(f"{prefix}c"):
-                await charts.main(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}f"):
-                await futcharts.main(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}x"):
-                await fxcharts.main(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}ngall"):
-                await ng_all.main(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}rc"):
-                await ng_rep.custom(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}anom"):
-                await ng_rep.all_anom(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}r"):
-                await ng_rep.main(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}earnings"):
-                await earnings.company(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}addtag"):
-                await refs.add_ref(message, canary=is_dev)
-            
-            elif message.content.startswith(f"{prefix}8ball"):
-                await eightball.main(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}showtags"):
-                await refs.show_tags(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}tag"):
-                await refs.use_tag(message, canary=is_dev)
-
-            elif message.content.startswith(f"{prefix}eval"):
-                if message.author.id == 192696739981950976 or message.author.id == 513549665019363329:
-                    command = " ".join(message.content.split(" ")[1:])
-                    print(command)
-                    try:
-                        resp = eval(command)
-                    except Exception as e:
-                        resp = e
-
-                    msg = f"```{resp}```"
-                    await message.channel.send(msg)
-                else:
-                    await message.channel.send(":lock: You do not have permission to evaluate in runtime!")
+        
 
 ctx = Stella()
 ctx.run(os.getenv("BOT_TOKEN"))
