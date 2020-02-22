@@ -3,3 +3,4 @@
 *.save
 *.png
 *.json
+bin/
