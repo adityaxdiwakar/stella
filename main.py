@@ -61,6 +61,7 @@ async def status():
 module_links = {
     "ping": ping.main,
     "c": charts.main,
+    "mc": charts.multi,
     "f": futcharts.main,
     "x": fxcharts.main,
     "ngall": ng_all.main,

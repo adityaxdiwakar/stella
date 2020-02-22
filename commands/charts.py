@@ -79,3 +79,57 @@ async def main(message, canary=False):
         await msg.edit(content=premsg + f"Something went wrong, contact <@192696739981950976> with ```{e}```")
 
 
+async def multi(message, canary=False):
+    premsg = ["**[Canary]** ", " "][not canary]
+    try:
+        chart_type = message.content[len(prefix) + 2] #the third id
+        if chart_type == " ":
+            chart_type = 5
+        chart_type = int(chart_type)
+    except ValueError:
+        await message.channel.send(premsg + "Something went wrong with your request, check the command try again!")
+        return
+
+    if chart_type > 7 or chart_type < 0:
+        await message.channel.send(premsg + "You asked for a chart type that we don't have, check the bot command channel for help!")
+        return
+
+    message_split = message.content.split(" ")
+    if len(message_split) < 2:
+        await message.channel.send(premsg + "Sorry, couldn't identify your ticker! Try again!")
+        return
+
+    msg = await message.channel.send(premsg + "Grabbing chart, stand by.")
+
+    joined_split = " ".join(message_split[1:])
+    ticker_split = joined_split.split(",")
+    if len(ticker_split) == 1:
+        ticker_split = joined_split.split(" ")
+    if len(ticker_split) == 1:
+        await msg.edit(content=premsg + " Sorry, to use the ``?mc`` command, enter more than one ticker!")
+        return
+
+    ticker_split = [x.strip() for x in ticker_split]
+
+    link_times = []
+    errored_tickers = []
+    t_error = None
+    for ticker in ticker_split:
+        rn, error = create_chart(ticker, chart_type)
+
+        if error != None:
+            t_error = error
+            errored_tickers.append(ticker)
+        else:
+            link_times.append(rn)
+
+    links = [f"https://img.adi.wtf/ca/{x}.png" for x in link_times]
+    link_text = ", ".join(links)
+    omitted_tickers = " ".join(errored_tickers)
+    omitted_tickers = omitted_tickers.upper()
+
+    text = f"{premsg}Alright, here's your {timeframe_names[chart_type]} chart(s): {link_text}."
+    if len(errored_tickers) > 0:
+        text += f" ``{omitted_tickers}`` had to be ommitted due to errors during fetching."
+    await msg.edit(content=text)
+
