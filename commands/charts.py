@@ -115,6 +115,10 @@ async def multi(message, canary=False):
 
     ticker_split = [x.strip() for x in ticker_split]
 
+    if len(ticker_split) > 8:
+        await msg.edit(content=premsg + "Sorry, too many tickers entered. There is a maximum of 8!")
+        return
+
     link_times = []
     errored_tickers = []
     t_error = None
