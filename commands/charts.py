@@ -1,4 +1,5 @@
 from urllib.parse import urlencode
+from io import BytesIO
 import discord
 import requests
 import io
@@ -11,7 +12,7 @@ timeframes = ["i1", "i3", "i5", "i15", "i30", "d", "w", "m"]
 timeframe_names = ["1 minute intraday", "3 minute intraday", "5 minute intraday", "15 minute intraday", "30 minute intraday", "daily", "weekly", "monthly"]
 
 
-def create_chart(ticker, chart_type):
+def create_chart(ticker, chart_type, is_content=False):
     query = {
         "t": ticker,
         "ty": "c",
@@ -35,6 +36,9 @@ def create_chart(ticker, chart_type):
 
     if len(file.content) < 7500 or len(ticker) > 8:
         return (None, "Chart not found! An error occured, try again. If you need futures, use ``?f``.")
+
+    if is_content == True:
+        return (file.content, None)
 
     with open(f"/var/www/html/u/ca/{rn}.png", "wb") as f:
         f.write(file.content)
@@ -115,7 +119,7 @@ async def multi(message, canary=False):
     errored_tickers = []
     t_error = None
     for ticker in ticker_split:
-        rn, error = create_chart(ticker, chart_type)
+        rn, error = create_chart(ticker, chart_type, is_content=True)
 
         if error != None:
             t_error = error
@@ -123,13 +127,13 @@ async def multi(message, canary=False):
         else:
             link_times.append(rn)
 
-    links = [f"https://img.adi.wtf/ca/{x}.png" for x in link_times]
-    link_text = ", ".join(links)
+    files = [discord.File(BytesIO(x), filename=f"{time.time()}.png") for x in link_times]
     omitted_tickers = " ".join(errored_tickers)
     omitted_tickers = omitted_tickers.upper()
 
-    text = f"{premsg}Alright, here's your {timeframe_names[chart_type]} chart(s): {link_text}."
+    text = f"{premsg}Alright, here are your {timeframe_names[chart_type]} charts."
     if len(errored_tickers) > 0:
         text += f" ``{omitted_tickers}`` had to be ommitted due to errors during fetching."
-    await msg.edit(content=text)
+    await message.channel.send(text, files=files)
+    await msg.delete()
 
