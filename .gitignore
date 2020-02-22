@@ -1,3 +1,5 @@
 *.pyc
 .env
 *.save
+*.png
+*.json

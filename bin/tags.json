@@ -1,16 +1,1 @@
-{
-    "gold": "DONT SELL THE GOLD!!!! https://i.imgur.com/gGKcGCr.png",
-    "tradewar": "https://i.imgur.com/JXNlKXj.png",
-    "donthide": "https://i.imgur.com/f7U2QFJ.png",
-    "earnings-options": "A note about options on earnings, the implied volatility (IV) which makes up a huge amount of the price of the calls/puts prior to an earnings announcement will completely cut out almost all extrinsic value from the option. \n\nThe only way to be profitable from earnings with options is to be in the money, solely having your gains being from intrinsic value. This server does not support, endorse, or encourage the trading of options on earnings announcements.",
-    "option-values": "Options have two valuations. One is intrinsic value, the other is extrinsic value.\n\nIntrinsic value is the difference between the strike price and the current price, meaning if you have a call with strike 200 and the stock is 205, the intrinsic value is 5 dollars. Keep in mind, you cannot have negative intrinsic value, that would just be 0 cause it would be worthless.\n\nExtrinsic value is people betting on the probabilities. The greeks are factored into this extrinsic value. If people think the stock is gonna go up, the options will have more extrinsic value. Extrinsic value is always more than intrinsic value.\n\nAll else equal (ceteris paribus), as you get closer to the expiration - the option gets closer to the intrinsic value. The farther out you are, the extrinsic value is still a lot higher.\n\nThat's why very OTM options can still have value, because of the extrinsic value. https://img.adi.wtf/gPw0L.png",
-    "deathcross": "5 and 10 second moving averages are crossing over! https://i.imgur.com/6oGarmi.jpg",
-    "notQE": "I swear we're not easing anything!?! https://i.imgur.com/zW7y1i1.jpg",
-    "notbullish": "https://i.imgur.com/rWCIw6z.jpg",
-    "thisrally": "https://i.imgur.com/gNhesBh.jpg",
-    "keepbuying": "https://i.imgur.com/G1oxce5.jpg",
-    "everydip": "https://i.imgur.com/fzwGRb8.jpg",
-    "lovestock": "https://tenor.com/view/ilove-that-stock-interview-stock-market-gif-10520500",
-    "invite": "The official permanent invite code for the Wall Street server is https://discord.gg/ZQUWjqe",
-    "earnings": "https://img.adi.wtf/ecal.png"
-}
+{}
