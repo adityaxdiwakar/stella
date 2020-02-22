@@ -97,7 +97,7 @@ class Stella(discord.Client):
 
         for mod in module_links:
             if message.content.startswith(prefix + mod):
-                module_links[mod](message, canary=is_dev)
+                await module_links[mod](message, canary=is_dev)
 
         
 

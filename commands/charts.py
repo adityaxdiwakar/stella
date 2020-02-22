@@ -7,9 +7,43 @@ import time
 
 prefix = os.getenv("BOT_PREFIX")
 
+timeframes = ["i1", "i3", "i5", "i15", "i30", "d", "w", "m"]
+timeframe_names = ["1 minute intraday", "3 minute intraday", "5 minute intraday", "15 minute intraday", "30 minute intraday", "daily", "weekly", "monthly"]
+
+
+def create_chart(ticker, chart_type):
+    query = {
+        "t": ticker,
+        "ty": "c",
+        "ta": str(int(chart_type < 6)),
+        "p": timeframes[chart_type],
+        "s": "l"
+    }
+
+    root_url = "https://elite.finviz.com/chart.ashx"
+    if chart_type > 4 and chart_type != 5:
+        root_url = "https://finviz.com/chart.ashx"
+
+    if chart_type == 5:
+        query["ta"] = "st_c,sch_200p,sma_50,sma_200,sma_20,sma_100,bb_20_2,rsi_b_14,macd_b_12_26_9,stofu_b_14_3_3"
+
+    qstr = urlencode(query)
+
+    file = requests.get(f"{root_url}?{qstr}")
+
+    rn = round(time.time())
+
+    if len(file.content) < 7500 or len(ticker) > 8:
+        return (None, "Chart not found! An error occured, try again. If you need futures, use ``?f``.")
+
+    with open(f"{os.getenv('SYS_FILE_LOCATION')}/{rn}.png", "wb") as f:
+        f.write(file.content)
+
+    return (rn, None)
+
+
 async def main(message, canary=False):
-    premsgs = ["**[Canary]** ", " "]
-    premsg = premsgs[not canary]
+    premsg = ["**[Canary]** ", " "][not canary]
     try:
         chart_type = message.content[len(prefix) + 1] #the third id
         if chart_type == " ":
@@ -23,9 +57,6 @@ async def main(message, canary=False):
         await message.channel.send(premsg + "You asked for a chart type that we don't have, check the bot command channel for help!")
         return
 
-    timeframes = ["i1", "i3", "i5", "i15", "i30", "d", "w", "m"]
-    timeframe_names = ["1 minute intraday", "3 minute intraday", "5 minute intraday", "15 minute intraday", "30 minute intraday", "daily", "weekly", "monthly"]
-
     message_split = message.content.split(" ")
     if len(message_split) < 2:
         await message.channel.send(premsg + "Sorry, couldn't identify your ticker! Try again!")
@@ -36,35 +67,15 @@ async def main(message, canary=False):
     msg = await message.channel.send(premsg + "Grabbing chart, stand by.")
 
     try:
-        query = {
-            "t": ticker,
-            "ty": "c",
-            "ta": str(int(chart_type < 6)),
-            "p": timeframes[chart_type],
-            "s": "l"
-        }
+        rn, error = create_chart(ticker, chart_type)
 
-        root_url = "https://elite.finviz.com/chart.ashx"
-        if chart_type > 4 and chart_type != 5:
-            root_url = "https://finviz.com/chart.ashx"
-
-        if chart_type == 5:
-            query["ta"] = "st_c,sch_200p,sma_50,sma_200,sma_20,sma_100,bb_20_2,rsi_b_14,macd_b_12_26_9,stofu_b_14_3_3"
-
-        qstr = urlencode(query)
-
-        file = requests.get(f"{root_url}?{qstr}")
-
-        rn = round(time.time())
-
-        if len(file.content) == 0:
-            await msg.edit(content=premsg + f"Chart not found! An error occured, try again. If you need futures, use ``?f``.")
+        if error != None:
+            await msg.edit(content=premsg + error)
             return
-
-        with open(f"/var/www/html/u/ca/{rn}.png", "wb") as f:
-            f.write(file.content)
 
         await msg.edit(content=premsg + f"Alright, here's your {timeframe_names[chart_type]} chart: https://img.adi.wtf/ca/{rn}.png")
 
     except Exception as e:
-        await msg.edit(content=f"Something went wrong, contact <@192696739981950976> with ```{e}```")
+        await msg.edit(content=premsg + f"Something went wrong, contact <@192696739981950976> with ```{e}```")
+
+
