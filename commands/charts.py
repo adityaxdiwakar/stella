@@ -36,7 +36,7 @@ def create_chart(ticker, chart_type):
     if len(file.content) < 7500 or len(ticker) > 8:
         return (None, "Chart not found! An error occured, try again. If you need futures, use ``?f``.")
 
-    with open(f"{os.getenv('SYS_FILE_LOCATION')}/{rn}.png", "wb") as f:
+    with open(f"/var/www/html/u/ca/{rn}.png", "wb") as f:
         f.write(file.content)
 
     return (rn, None)
