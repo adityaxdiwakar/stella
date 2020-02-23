@@ -19,6 +19,7 @@ from commands import ng_rep
 from commands import earnings
 from commands import eightball
 from commands import evalmod
+from commands import custom_futures
 
 import copy
 import discord
@@ -60,6 +61,7 @@ async def status():
 # {prefix: component}
 module_links = {
     "ping": ping.main,
+    "cf": custom_futures.main,
     "c": charts.main,
     "mc": charts.multi,
     "f": futcharts.main,
@@ -99,6 +101,7 @@ class Stella(discord.Client):
         for mod in module_links:
             if message.content.startswith(prefix + mod):
                 await module_links[mod](message, canary=is_dev)
+                break
 
         
 
