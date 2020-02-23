@@ -17,10 +17,10 @@ prefix = os.getenv("BOT_PREFIX")
 async def main(d_message, canary=False):
     premsg = ["**[Canary]** ", " "][not canary]
 
-    chart_type = int(d_message.content[len(prefix) + 2])
+    chart_type = d_message.content[len(prefix) + 2]
     if chart_type == " ":
         chart_type = 1
-    chart_type -= 1
+    chart_type = int(chart_type) - 1
 
     if chart_type < 0 or chart_type > 7:
         await d_message.channel.send(premsg + "Sorry, please pick between 1 and 8 for the chart length.")
