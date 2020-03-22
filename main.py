@@ -21,42 +21,13 @@ from commands import eightball
 from commands import evalmod
 from commands import custom_futures
 
+from utils import reactions
+
 import copy
 import discord
 import time
 import asyncio
 import ast
-
-def exec_then_eval(code):
-    block = ast.parse(code, mode='exec')
-
-    # assumes last node is an expression
-    last = ast.Expression(block.body.pop().value)
-
-    _globals, _locals = {}, {}
-    exec(compile(block, '<string>', mode='exec'), _globals, _locals)
-    return eval(compile(last, '<string>', mode='eval'), _globals, _locals)
-
-async def status():
-    counter = 0
-    links = ["https://www.investing.com/indices/us-spx-500-futures", "https://www.investing.com/indices/us-spx-500-futures", "https://www.investing.com/indices/us-spx-500-futures", "https://www.investing.com/indices/us-spx-500-futures"]
-    tickers = ["ES", "ES", "ES", "ES"]
-    while True:
-        r = requests.get(links[counter % len(links)],  headers={'User-Agent': 'Mozilla/5.0'})
-        soup = BeautifulSoup(r.content, 'html.parser')
-        last_price_obj = soup.find(id="last_last")
-        prices = [str(div.string).strip() for div in last_price_obj.parent]
-        prices = [div for div in prices if div != ""]
-        last_price = prices[0]
-        last_price = float(prices[0].replace(",", ""))
-        price_change = prices[1]
-        price_percent = prices[2][1:]
-        ticker = tickers[counter % len(links)]
-        activity = discord.Activity(name=f"{ticker}: {last_price} ({price_change} {price_percent})", type=0)
-        await ctx.change_presence(activity=activity)
-        counter += 1
-        await asyncio.sleep(15)
-
 
 # {prefix: component}
 module_links = {
@@ -78,15 +49,16 @@ module_links = {
     "eval": evalmod.main
 }
 
+
+
 class Stella(discord.Client):
     async def on_ready(self):
         print('Logged on as', self.user)
-        channel = ctx.get_channel(636986005773352980)
+        channel = ctx.get_channel(638244784527507496)
         dev_msg = "I am currently running in the **production** environment."
         if is_dev:
             dev_msg = "I am currently running in a **canary development** environment."
         await channel.send(f"Stella has been rebooted. The current time is {datetime.datetime.now().strftime('%H:%M:%S on %b %d')}. {dev_msg}")
-        ctx.loop.create_task(status())
 
     async def on_message(self, message):
         message.content.split(" ")[0] = message.content.split(" ")[0].lower()
@@ -102,6 +74,12 @@ class Stella(discord.Client):
             if message.content.startswith(prefix + mod):
                 await module_links[mod](message, canary=is_dev)
                 break
+
+    async def on_raw_reaction_add(self, payload):
+        await reactions.handler(self, payload, "add")
+    
+    async def on_raw_reaction_remove(self, payload):
+        await reactions.handler(self, payload, "remove")
 
         
 
