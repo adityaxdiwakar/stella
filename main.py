@@ -20,6 +20,7 @@ from commands import earnings
 from commands import eightball
 from commands import evalmod
 from commands import custom_futures
+from commands import position_size
 
 from utils import reactions
 
@@ -46,7 +47,8 @@ module_links = {
     "8ball": eightball.main,
     "showtags": refs.show_tags,
     "tag": refs.use_tag,
-    "eval": evalmod.main
+    "eval": evalmod.main,
+    "pos": position_size.calculator
 }
 
 
@@ -54,11 +56,6 @@ module_links = {
 class Stella(discord.Client):
     async def on_ready(self):
         print('Logged on as', self.user)
-        channel = ctx.get_channel(638244784527507496)
-        dev_msg = "I am currently running in the **production** environment."
-        if is_dev:
-            dev_msg = "I am currently running in a **canary development** environment."
-        await channel.send(f"Stella has been rebooted. The current time is {datetime.datetime.now().strftime('%H:%M:%S on %b %d')}. {dev_msg}")
 
     async def on_message(self, message):
         message.content.split(" ")[0] = message.content.split(" ")[0].lower()
