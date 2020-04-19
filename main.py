@@ -21,6 +21,7 @@ from commands import eightball
 from commands import evalmod
 from commands import custom_futures
 from commands import position_size
+from commands import tdcommands
 
 from utils import reactions
 
@@ -36,6 +37,7 @@ module_links = {
     "cf": custom_futures.main,
     "c": charts.main,
     "mc": charts.multi,
+    "fun": tdcommands.fundamentals,
     "f": futcharts.main,
     "x": fxcharts.main,
     "ngall": ng_all.main,
