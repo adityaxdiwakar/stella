@@ -19,7 +19,6 @@ from commands import ng_rep
 from commands import earnings
 from commands import eightball
 from commands import evalmod
-from commands import custom_futures
 from commands import position_size
 from commands import tdcommands
 
@@ -34,7 +33,6 @@ import ast
 # {prefix: component}
 module_links = {
     "ping": ping.main,
-    "cf": custom_futures.main,
     "c": charts.main,
     "mc": charts.multi,
     "fun": tdcommands.fundamentals,
