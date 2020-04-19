@@ -36,6 +36,7 @@ module_links = {
     "c": charts.main,
     "mc": charts.multi,
     "fun": tdcommands.fundamentals,
+    "div": tdcommands.dividends,
     "f": futcharts.main,
     "x": fxcharts.main,
     "ngall": ng_all.main,
