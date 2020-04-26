@@ -61,7 +61,11 @@ async def update_price():
         counter += 1
         r = requests.get("https://md.adi.wtf/recent/")
         price = r.json()["payload"]["trade"]["price"]
-        await channel.edit(name=f"ES @ {price}")
+        n_percentage = round(100 * (price - 2826.5) / 2826.5, 2)
+        percentage = str(n_percentage) + "%"
+        if n_percentage > 0:
+            percentage = "+" + percentage
+        await channel.edit(name=f"ES @ {price} ({percentage})")
         await asyncio.sleep(12) # task runs every 60 seconds
 
 class Stella(discord.Client):
