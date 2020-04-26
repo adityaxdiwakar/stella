@@ -53,7 +53,16 @@ module_links = {
     "pos": position_size.calculator
 }
 
-
+async def update_price():
+    await ctx.wait_until_ready()
+    counter = 0
+    channel = ctx.get_channel(703080609358020608)
+    while True:
+        counter += 1
+        r = requests.get("https://md.adi.wtf/recent/")
+        price = r.json()["payload"]["trade"]["price"]
+        await channel.edit(name=f"ES @ {price}")
+        await asyncio.sleep(12) # task runs every 60 seconds
 
 class Stella(discord.Client):
     async def on_ready(self):
@@ -83,4 +92,5 @@ class Stella(discord.Client):
         
 
 ctx = Stella()
+ctx.loop.create_task(update_price())
 ctx.run(os.getenv("BOT_TOKEN"))
