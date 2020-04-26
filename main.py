@@ -55,17 +55,19 @@ module_links = {
 
 async def update_price():
     await ctx.wait_until_ready()
-    counter = 0
     channel = ctx.get_channel(703080609358020608)
     while True:
-        counter += 1
-        r = requests.get("https://md.adi.wtf/recent/")
-        price = r.json()["payload"]["trade"]["price"]
-        n_percentage = round(100 * (price - 2826.5) / 2826.5, 2)
-        percentage = str(n_percentage) + "%"
-        if n_percentage > 0:
-            percentage = "+" + percentage
-        await channel.edit(name=f"ES @ {price} ({percentage})")
+        try:
+            r = requests.get("https://md.adi.wtf/recent/")
+            price = r.json()["payload"]["trade"]["price"]
+            settlement = r.json()["payload"]["session_prices"]["settlement"]
+            n_percentage = round(100 * (price - settlement) / 2826.5, 2)
+            percentage = str(n_percentage) + "%"
+            if n_percentage > 0:
+                percentage = "+" + percentage
+            await channel.edit(name=f"ES @ {price} ({percentage})")
+        except:
+            pass
         await asyncio.sleep(12) # task runs every 60 seconds
 
 class Stella(discord.Client):
