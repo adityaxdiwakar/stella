@@ -30,12 +30,14 @@ def create_chart(ticker, chart_type, is_content=False):
 
     qstr = urlencode(query)
 
-    file = requests.get(f"{root_url}?{qstr}")
+
+
+    file = requests.get(f"{root_url}?{qstr}", headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Safari/537.36"})
 
     rn = round(time.time())
 
     if len(file.content) < 7500 or len(ticker) > 8:
-        return (None, "Chart not found! An error occured, try again. If you need futures, use ``?f``.")
+       return (None, "Chart not found! An error occured, try again. If you need futures, use ``?f``.")
 
     if is_content == True:
         return (file.content, None)

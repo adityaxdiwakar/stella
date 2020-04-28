@@ -9,6 +9,6 @@ async def main(message, canary=False):
             resp = e
 
         msg = f"```{resp}```"
-        await message.channel.send(prefix + msg)
+        await message.channel.send(premsg + msg)
     else:
-        await message.channel.send(prefix + ":lock: You do not have permission to evaluate in runtime!")
+        await message.channel.send(premsg + ":lock: You do not have permission to evaluate in runtime!")

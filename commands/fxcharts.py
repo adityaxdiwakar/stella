@@ -50,7 +50,7 @@ async def main(message, canary=False):
         root_url = "https://finviz.com/fx_image.ashx"
 
         timeframe = timeframes[chart_type]
-        file = requests.get(f"{root_url}?{ticker}_{timeframe}_l.png")
+        file = requests.get(f"{root_url}?{ticker}_{timeframe}_l.png", headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Safari/537.36"})
 
         rn = round(time.time())
         with open(f"/var/www/html/u/fx/{rn}.png", "wb") as f:
