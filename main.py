@@ -55,7 +55,8 @@ module_links = {
 
 async def update_price():
     await ctx.wait_until_ready()
-    channel = ctx.get_channel(703080609358020608)
+    ws_channel = ctx.get_channel(703080609358020608)
+    em_channel = ctx.get_channel(709860290694742098)
     while True:
         try:
             r = requests.get("https://md.adi.wtf/recent/")
@@ -65,7 +66,9 @@ async def update_price():
             percentage = str(n_percentage) + "%"
             if n_percentage > 0:
                 percentage = "+" + percentage
-            await channel.edit(name=f"ES @ {price} ({percentage})")
+            message = f"ES @ {price} ({percentage})"
+            await ws_channel.edit(name=message)
+            await em_channel.edit(name=message)
         except:
             pass
         await asyncio.sleep(12) # task runs every 60 seconds
