@@ -21,6 +21,7 @@ from commands import eightball
 from commands import evalmod
 from commands import position_size
 from commands import tdcommands
+from commands import vixcentral
 
 from utils import reactions
 
@@ -50,7 +51,8 @@ module_links = {
     "showtags": refs.show_tags,
     "tag": refs.use_tag,
     "eval": evalmod.main,
-    "pos": position_size.calculator
+    "pos": position_size.calculator,
+    "vixc": vixcentral.main
 }
 
 async def update_price():
