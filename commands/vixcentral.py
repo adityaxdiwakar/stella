@@ -51,9 +51,8 @@ async def main(message, canary=False):
         fig.update_layout(template="plotly_dark", title=f"VIX Calendar Curve for {r_json[1][0].split(' ')[0]}", width=1440)
 
         rn = time.time()
-        fig.write_image(f"bin/{rn}.jpeg")
+        fig.write_image(f"/var/www/html/u/ca/{rn}.jpeg")
         link = f"https://img.adi.wtf/ca/{rn}.jpeg"
-        # fig.write_image(f"/var/www/html/u/ca/{rn}.jpeg")
 
         await msg.edit(content=premsg + f"Here you are: {link}")
         
