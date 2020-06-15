@@ -74,7 +74,7 @@ async def update_price():
             await em_channel.edit(name=message)
         except:
             pass
-        await asyncio.sleep(30) # task runs every 60 seconds
+        await asyncio.sleep(300) # task runs every 60 seconds
 
 class Stella(discord.Client):
     async def on_ready(self):
