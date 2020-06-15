@@ -62,6 +62,7 @@ async def update_price():
     while True:
         try:
             r = requests.get("https://md.adi.wtf/recent/")
+            print(r.json())
             price = r.json()["payload"]["trade"]["price"]
             settlement = r.json()["payload"]["session_prices"]["settlement"]
             n_percentage = round(100 * (price - settlement) / 2826.5, 2)
@@ -73,7 +74,7 @@ async def update_price():
             await em_channel.edit(name=message)
         except:
             pass
-        await asyncio.sleep(12) # task runs every 60 seconds
+        await asyncio.sleep(30) # task runs every 60 seconds
 
 class Stella(discord.Client):
     async def on_ready(self):
