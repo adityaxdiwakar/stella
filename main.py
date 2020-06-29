@@ -65,11 +65,12 @@ async def update_price():
             print(r.json())
             price = r.json()["payload"]["trade"]["price"]
             settlement = r.json()["payload"]["session_prices"]["settlement"]
-            n_percentage = round(100 * (price - settlement) / 2826.5, 2)
+            n_diff = round(price - settlement, 2)
+            n_percentage = round(100 * (n_diff) / 2826.5, 2)
             percentage = str(n_percentage) + "%"
             if n_percentage > 0:
                 percentage = "+" + percentage
-            message = f"ES @ {price} ({percentage})"
+            message = f"{price:,} {n_diff} ({percentage})"
             await ws_channel.edit(name=message)
             await em_channel.edit(name=message)
         except:
