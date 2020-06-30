@@ -62,7 +62,6 @@ async def update_price():
     while True:
         try:
             r = requests.get("https://md.adi.wtf/recent/")
-            print(r.json())
             price = r.json()["payload"]["trade"]["price"]
             settlement = r.json()["payload"]["session_prices"]["settlement"]
             n_diff = round(price - settlement, 2)
@@ -70,7 +69,9 @@ async def update_price():
             percentage = str(n_percentage) + "%"
             if n_percentage > 0:
                 percentage = "+" + percentage
-            message = f"{price:,} {n_diff} ({percentage})"
+            if n_diff > 0:
+                n_diff = "+" + str(n_diff)
+            message = f"{price:,} [{n_diff}, {percentage}]"
             await ws_channel.edit(name=message)
             await em_channel.edit(name=message)
         except:
