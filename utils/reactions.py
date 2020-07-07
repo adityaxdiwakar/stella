@@ -1,6 +1,6 @@
 reaction_config = {
     632602390985703424: { # verification channel 
-        "💰": [632600011280089108, 691138779171258368] # moneybag and relevant role
+        "💰": [632600011280089108] # moneybag and relevant role
     },
     691130032051060766: {
         "🕐": [691116986272579614],
