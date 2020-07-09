@@ -59,6 +59,7 @@ async def update_price():
     await ctx.wait_until_ready()
     ws_channel = ctx.get_channel(703080609358020608)
     em_channel = ctx.get_channel(709860290694742098)
+    message = None
     while True:
         try:
             r = requests.get("https://md.adi.wtf/recent/")
@@ -71,12 +72,13 @@ async def update_price():
                 percentage = "+" + percentage
             if n_diff > 0:
                 n_diff = "+" + str(n_diff)
-            message = f"{price:,} [{n_diff}, {percentage}]"
-            await ws_channel.edit(name=message)
-            await em_channel.edit(name=message)
+            message = f"{price:,} ({n_diff}, {percentage})"
+            print("Changing channel names to:", message)
         except Exception as e:
             print("Failed to update channel due to", e)
-        await asyncio.sleep(300) # task runs every 60 seconds
+        await ws_channel.edit(name=message)
+        await em_channel.edit(name=message)
+        await asyncio.sleep(300) # task runs every 5 minutes
 
 class Stella(discord.Client):
     async def on_ready(self):
