@@ -72,6 +72,7 @@ async def update_price():
             if n_diff > 0:
                 n_diff = "+" + str(n_diff)
             message = f"{price:,} [{n_diff}, {percentage}]"
+            print(message)
             await ws_channel.edit(name=message)
             await em_channel.edit(name=message)
         except:

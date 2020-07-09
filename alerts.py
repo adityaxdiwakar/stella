@@ -18,9 +18,9 @@ text = {
 	"tokyo-open": "🔔🔔🔔 The TSE (Tokyo Stock Exchange) is now open",
 	"tokyo-close": "🔔🔔🔔 The TSE (Tokyo Stock Exchange) is now closed",
 	"hk-open": "🔔🔔🔔 The HKE (Hong Kong Stock Exchange) is now open",
-	"hk-close": "🔔🔔🔔 The HKE (Hong Long Stock Exchange) is now closed",
+	"hk-close": "🔔🔔🔔 The HKE (Hong Kong Stock Exchange) is now closed",
 	"sse-open": "🔔🔔🔔 The SSE (Shanghai Stock Exchange) is now open",
-	"sse-close": "🔔🔔🔔 The SSE (Shanghai Stock Exchange) is now close"
+	"sse-close": "🔔🔔🔔 The SSE (Shanghai Stock Exchange) is now closed"
 }[argument]
 
 for webhook in [os.getenv("WEBHOOK_1"), os.getenv("WEBHOOK_2")]:
