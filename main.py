@@ -76,8 +76,11 @@ async def update_price():
             print("Changing channel names to:", message)
         except Exception as e:
             print("Failed to update channel due to", e)
-        await ws_channel.edit(name=message)
-        await em_channel.edit(name=message)
+        for channel in [ws_channel, em_channel]:
+            try:
+                await channel.edit(name=message)
+            except Exception as e:
+                print(f"Failed to update channel {}
         await asyncio.sleep(300) # task runs every 5 minutes
 
 class Stella(discord.Client):
