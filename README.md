@@ -1,4 +1,4 @@
-# Stella | Discord Bot
+tella | Discord Bot
 ----
 
 Stella is a Discord Bot intended for the Stock Market Live Chat, it uses a combination of charting and statistical sources in order to provide quick and referencable data to the members of the server. For all questions and inquiries, feel free to contact ``@aditya#1337`` on Discord or email me ``aditya@diwakar.io``.
@@ -60,3 +60,4 @@ Support for this bot is provided, please open a GitHub issue or contact me throu
 ## Contribution
 
 We're currently closed to taking any requests, if you make a PR, it'll most likely be denied due to our policies.
+
