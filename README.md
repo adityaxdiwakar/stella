@@ -5,7 +5,7 @@ Stella is a Discord Bot intended to provide access to financial data through ope
 
 ## Support
 
-Support for this bot is provided, please open a GitHub issue or contact me through Discord (``aditya#0001``) or email (``aditya@diwakar.io``)./
+Support for this bot is provided, please open a GitHub issue or contact me through Discord (``aditya#0001``) or email (``aditya@diwakar.io``).
 
 ## Contribution
 
