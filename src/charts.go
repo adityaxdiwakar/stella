@@ -47,5 +47,6 @@ func finvizChartHandler(ticker string, timeframe int8) string {
 	qStr, _ := query.Values(queryParams)
 	chartUrl := fmt.Sprintf("%s?%s", rootUrl, qStr.Encode())
 
+	log.Println(chartUrl)
 	return "nil"
 }
