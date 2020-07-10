@@ -1,61 +1,11 @@
 Stella | Discord Bot
 ----
 
-Stella is a Discord Bot intended for the Stock Market Live Chat, it uses a combination of charting and statistical sources in order to provide quick and referencable data to the members of the server. For all questions and inquiries, feel free to contact ``@aditya#1337`` on Discord or email me ``aditya@diwakar.io``.
-
-## Documentation
-
-### Ping command
-
-Our ping command is quite simple, run it using ``?ping``. You will be returned a simple response with the roundtrip time for the WS/API timing. This is extraneous and used to measure the health of the Bot/Discord servers.
-
-### Charting commands for equities
-
-The charting command is encompassed in ``?c``.
-
-#### Level System
-
-The bot is equipped with a simple "level" system for the charting command:
-
-0. 1 Minute Intraday 
-1. 3 Minute Intraday
-2. 5 Minute Intraday
-3. 15 Minute Intraday
-4. 30 Minute Intraday
-5. Daily
-6. Weekly
-7. Monthly
-
-These numbers can be appended to the command above, for example: ``?c2`` will bring up a 5 minute intraday chart.
-
-By default, ``?c`` brings up a daily chart.
-
-
-### Charting commands for futures
-
-The charting command for futures is encompassed in ``?f``.
-
-#### Level System
-
-The bot is equipped with a simple "level" system for the charting command:
-
-1. 5 Minute
-2. Hourly
-3. Daily
-4. Weekly
-5. Monthly
-
-These numbers can be appended to the command above, for example: ``?f2`` will bring up a daily futures chart.
-
-By default, ``?f`` brings up a 5 minute chart.
-
-#### Usage
-
-Use the command as: ``?f<level> <futures ticker>``. If the level is blank, the default will be used. Refer to the levels from above.
+Stella is a Discord Bot intended to provide access to financial data through open and closed source tools provided by third-parties and Aditya Diwakar as well. This bot is intended to be used in the ``Wall St. Community`` server but has been introduced in numerous servers since then. This bot is written in Golang and is currently on-going a full migration from the previous Python version.
 
 ## Support
 
-Support for this bot is provided, please open a GitHub issue or contact me through Discord (``aditya#1337``) or email (``aditya@diwakar.io``). 
+Support for this bot is provided, please open a GitHub issue or contact me through Discord (``aditya#0001``) or email (``aditya@diwakar.io``)./
 
 ## Contribution
 
