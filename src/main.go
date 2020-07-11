@@ -7,16 +7,26 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
 
+var startTime time.Time
+var messagesSeen int64
+
 func init() {
+	startTime = time.Now()
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+}
+
+func uptime() string {
+	return time.Since(startTime).Round(time.Second).String()
 }
 
 func main() {
@@ -43,6 +53,8 @@ func main() {
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+	messagesSeen += 1
+
 	// Check if the prefix is mentioned by using strings.HasPrefix
 	if !strings.HasPrefix(m.Content, os.Getenv("PREFIX")) {
 		return
@@ -60,6 +72,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case strings.HasPrefix(mSplit[0], "c"):
 		finvizChartSender(s, m, mSplit)
 
+	case mSplit[0] == "v":
+		stellaVersion(s, m)
+
 	}
 }
 
@@ -73,4 +88,29 @@ func unique(strSlice []string) []string {
 		}
 	}
 	return list
+}
+
+func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
+	embed := &discordgo.MessageEmbed{
+		Color:       0x00cd6e,
+		Title:       "About Stella",
+		Description: "Discord Bot for Financial Markets",
+		Fields: []*discordgo.MessageEmbedField{
+			&discordgo.MessageEmbedField{
+				Name: "Status",
+				Value: fmt.Sprintf("%s\n%s\n%s",
+					fmt.Sprintf("**Messages Seen**: %d", messagesSeen),
+					fmt.Sprintf("**Uptime**: %s", uptime()),
+					fmt.Sprintf("**Version**: v0.11"),
+				),
+			},
+		},
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: "http://img.aditya.diwakar.io/stellaLogo.png",
+		},
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: "Made with ❤️ by Aditya Diwakar",
+		},
+	}
+	s.ChannelMessageSendEmbed(m.ChannelID, embed)
 }
