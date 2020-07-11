@@ -34,9 +34,6 @@ import ast
 # {prefix: component}
 module_links = {
     "deltag": refs.rm_tag,
-    "ping": ping.main,
-    "c": charts.main,
-    "mc": charts.multi,
     "fun": tdcommands.fundamentals,
     "div": tdcommands.dividends,
     "f": futcharts.main,
