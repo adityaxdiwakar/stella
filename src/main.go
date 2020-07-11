@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
@@ -42,9 +43,34 @@ func main() {
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Content == "ping" {
-		ping(s, m)
-	} else if m.Content == "queryChart" {
-		finvizChartHandler("aapl", 5)
+	// Check if the prefix is mentioned by using strings.HasPrefix
+	if !strings.HasPrefix(m.Content, os.Getenv("PREFIX")) {
+		return
 	}
+
+	// If the prefix is present, remove the prefix for later handling
+	m.Content = m.Content[len(os.Getenv("PREFIX")):]
+	mSplit := strings.Split(m.Content, " ")
+
+	switch {
+
+	case mSplit[0] == "ping":
+		ping(s, m)
+
+	case strings.HasPrefix(mSplit[0], "c"):
+		finvizChartSender(s, m, mSplit)
+
+	}
+}
+
+func unique(strSlice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+	for _, entry := range strSlice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }
