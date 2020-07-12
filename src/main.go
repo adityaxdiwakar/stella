@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"os/signal"
 	"strings"
@@ -24,6 +25,8 @@ func init() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	rand.Seed(time.Now().Unix()) // global pseudo random generator
 }
 
 func uptime() string {
@@ -79,6 +82,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case strings.HasPrefix(mSplit[0], "x"):
 		finvizChartSender(s, m, mSplit, false, true)
 
+	case mSplit[0] == "8ball":
+		eightballSend(s, m)
+
 	case mSplit[0] == "v":
 		stellaVersion(s, m)
 
@@ -115,7 +121,7 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 					fmt.Sprintf("**Messages Seen**: %d", messagesSeen),
 					fmt.Sprintf("**Charts Served:** %d", chartsServed),
 					fmt.Sprintf("**Uptime**: %s", uptime()),
-					fmt.Sprintf("**Version**: v0.24"),
+					fmt.Sprintf("**Version**: v0.25"),
 				),
 			},
 		},
