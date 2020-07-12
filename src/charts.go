@@ -150,16 +150,17 @@ func finvizChartUrlDownloader(Url string, ticker string) (discordgo.File, error)
 }
 
 func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string, isFutures bool, isForex bool) {
+	if len(mSplit[0]) > 1 {
+		if _, err := strconv.Atoi(string(mSplit[0][1])); err != nil {
+			// The second character of the command is not an integer but the length is 2, therefore invalid
+			return
+		}
+	}
+
 	msg, err := s.ChannelMessageSend(m.ChannelID, ":clock1: Fetching your chart, stand by.")
 	if err != nil {
 		// An error occured that stopped the queue message from being sent, cancel progression
 		return
-	}
-
-	if len(mSplit[0]) > 1 {
-		if _, err := strconv.Atoi(string(mSplit[0][1])); err != nil {
-			// The second character of the command is not an integer but the length is 2, therefore invalid
-		}
 	}
 
 	intChartType := int8(-1)
