@@ -71,10 +71,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		ping(s, m)
 
 	case strings.HasPrefix(mSplit[0], "c"):
-		finvizChartSender(s, m, mSplit, false)
+		finvizChartSender(s, m, mSplit, false, false)
 
 	case strings.HasPrefix(mSplit[0], "f"):
-		finvizChartSender(s, m, mSplit, true)
+		finvizChartSender(s, m, mSplit, true, false)
+
+	case strings.HasPrefix(mSplit[0], "x"):
+		finvizChartSender(s, m, mSplit, false, true)
 
 	case mSplit[0] == "v":
 		stellaVersion(s, m)
@@ -105,7 +108,7 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 				Value: fmt.Sprintf("%s\n%s\n%s",
 					fmt.Sprintf("**Messages Seen**: %d", messagesSeen),
 					fmt.Sprintf("**Uptime**: %s", uptime()),
-					fmt.Sprintf("**Version**: v0.2rc1"),
+					fmt.Sprintf("**Version**: v0.2"),
 				),
 			},
 		},

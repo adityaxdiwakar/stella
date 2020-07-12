@@ -110,6 +110,36 @@ func finvizFuturesChartHandler(ticker string, timeframe int8) (string, error) {
 	return chartUrl, nil
 }
 
+func finvizForexChartHandler(ticker string, timeframe int8) (string, error) {
+	// No forex tickers are longer than 9 characters, hard limit
+	if len(ticker) > 9 {
+		return "", errors.New("Ticker is too long, not moving forward")
+	}
+
+	ticker = strings.ToUpper(ticker)
+
+	timeframes := []string{"m5", "h1", "d1", "w1", "mo"}
+	currencies := []string{"EURUSD", "GBPUSD", "USDJPY", "USDCAD", "USDCHF", "AUDUSD", "NZDUSD", "EURGBP", "GBPJPY", "BTCUSD"}
+
+	isValid := false
+	for _, currency := range currencies {
+		if currency == ticker {
+			isValid = true
+		}
+	}
+	if !isValid {
+		return "", errors.New("Forex ticker provided is not in list, cannot continue")
+	}
+
+	chartUrl := fmt.Sprintf("https://charts.aditya.diwakar.io/fx_image.ashx?%s_%s_l.png", ticker, timeframes[timeframe])
+
+	if finvizCheckContentLength(chartUrl) != nil {
+		return "", errors.New("Content length check failed, cannot continue")
+	}
+
+	return chartUrl, nil
+}
+
 func finvizChartUrlDownloader(Url string) (discordgo.File, error) {
 	resp, err := http.Get(Url)
 	if err != nil {
@@ -119,7 +149,7 @@ func finvizChartUrlDownloader(Url string) (discordgo.File, error) {
 	return discordgo.File{Name: "chart.png", Reader: resp.Body}, nil
 }
 
-func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string, isFutures bool) {
+func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string, isFutures bool, isForex bool) {
 	msg, err := s.ChannelMessageSend(m.ChannelID, ":clock1: Fetching your chart, stand by.")
 	if err != nil {
 		// An error occured that stopped the queue message from being sent, cancel progression
@@ -128,7 +158,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 
 	intChartType := int8(-1)
 	if len(mSplit[0]) == 1 || unicode.IsLetter(rune(mSplit[0][1])) {
-		if isFutures {
+		if isFutures || isForex {
 			intChartType = 1
 		} else {
 			intChartType = 5
@@ -138,7 +168,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		intChartType = int8(uncastedChartType)
 	}
 
-	if (intChartType > 5 || intChartType < 1) && isFutures {
+	if (intChartType > 5 || intChartType < 1) && (isFutures || isForex) {
 		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "You've requested an invalid chart timeframe, choose between 1 and 5.")
 		return
 	} else if (intChartType > 7 || intChartType < 0) && !isFutures {
@@ -146,7 +176,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		return
 	}
 
-	if isFutures {
+	if isFutures || isForex {
 		intChartType--
 	}
 
@@ -157,11 +187,20 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 	for _, ticker := range tickers {
 		var chartUrl string
 		var err error
-		if isFutures {
+
+		switch {
+
+		case isFutures:
 			chartUrl, err = finvizFuturesChartHandler(ticker, intChartType)
-		} else {
+
+		case isForex:
+			chartUrl, err = finvizForexChartHandler(ticker, intChartType)
+
+		default:
 			chartUrl, err = finvizEquityChartHandler(ticker, intChartType)
+
 		}
+
 		if err != nil {
 			tickerErrorStack = append(tickerErrorStack, ticker)
 		} else {
