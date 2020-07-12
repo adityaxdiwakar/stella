@@ -140,13 +140,13 @@ func finvizForexChartHandler(ticker string, timeframe int8) (string, error) {
 	return chartUrl, nil
 }
 
-func finvizChartUrlDownloader(Url string) (discordgo.File, error) {
+func finvizChartUrlDownloader(Url string, ticker string) (discordgo.File, error) {
 	resp, err := http.Get(Url)
 	if err != nil {
 		return discordgo.File{}, errors.New("Could not download file, for some reason")
 	}
 
-	return discordgo.File{Name: "chart.png", Reader: resp.Body}, nil
+	return discordgo.File{Name: fmt.Sprintf("%s.png", ticker), Reader: resp.Body}, nil
 }
 
 func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string, isFutures bool, isForex bool) {
@@ -188,6 +188,10 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 
 	tickers := unique(mSplit[1:])
 
+	if len(tickers) > 10 {
+		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "Multiple charts are limited to 10 per command unfortunately, please try again with fewer than 10 tickers")
+	}
+
 	chartsServed += len(tickers)
 
 	var files []*discordgo.File
@@ -212,7 +216,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		if err != nil {
 			tickerErrorStack = append(tickerErrorStack, ticker)
 		} else {
-			file, err := finvizChartUrlDownloader(chartUrl)
+			file, err := finvizChartUrlDownloader(chartUrl, ticker)
 			if err != nil {
 				tickerErrorStack = append(tickerErrorStack, ticker)
 			} else {
@@ -223,11 +227,9 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 
 	// Delete the interrim message, since it cannot be edited w/ files
 	s.ChannelMessageDelete(msg.ChannelID, msg.ID)
-	for _, file := range files {
-		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Files: []*discordgo.File{file},
-		})
-	}
+	s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+		Files: files,
+	})
 	if len(tickerErrorStack) > 0 {
 		joinedTickerStack := strings.Join(tickerErrorStack, ", ")
 		errorTickersMsg := fmt.Sprintf("**`%d`** tickers could not be loaded: ``%s``", len(tickerErrorStack), joinedTickerStack)
