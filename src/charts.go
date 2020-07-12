@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -94,51 +95,34 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 
 	tickers := unique(mSplit[1:])
 
-	if len(tickers) == 1 {
-		chartUrl, err := finvizChartHandler(tickers[0], intChartType)
+	var files []*discordgo.File
+	var tickerErrorStack []string
+	for _, ticker := range tickers {
+		chartUrl, err := finvizChartHandler(ticker, intChartType)
 		if err != nil {
-			errorMessage := fmt.Sprintf("`%s` could not be found, could it be a typo?", tickers[0])
-			s.ChannelMessageSend(m.ChannelID, errorMessage)
+			tickerErrorStack = append(tickerErrorStack, ticker)
 		} else {
-			messageEmbed := discordgo.MessageEmbed{Image: &discordgo.MessageEmbedImage{URL: chartUrl}}
-			msgContent := ""
-			s.ChannelMessageEditComplex(&discordgo.MessageEdit{
-				Content: &msgContent,
-				Embed:   &messageEmbed,
-				ID:      msg.ID,
-				Channel: msg.ChannelID,
-			})
-		}
-	} else {
-		var files []*discordgo.File
-		var tickerErrorStack []string
-		for _, ticker := range tickers {
-			chartUrl, err := finvizChartHandler(ticker, intChartType)
+			file, err := finvizChartUrlDownloader(chartUrl)
 			if err != nil {
 				tickerErrorStack = append(tickerErrorStack, ticker)
 			} else {
-				file, err := finvizChartUrlDownloader(chartUrl)
-				if err != nil {
-					tickerErrorStack = append(tickerErrorStack, ticker)
-				} else {
-					files = append(files, &file)
-				}
+				files = append(files, &file)
 			}
 		}
+	}
 
-		// Delete the interrim message, since it cannot be edited w/ files
-		s.ChannelMessageDelete(msg.ChannelID, msg.ID)
-		for _, file := range files {
-			s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-				Files: []*discordgo.File{file},
-			})
-		}
-		if len(tickerErrorStack) > 0 {
-			joinedTickerStack := strings.Join(tickerErrorStack, ", ")
-			errorTickersMsg := fmt.Sprintf("**`%d`** tickers could not be loaded: ``%s``", len(tickerErrorStack), joinedTickerStack)
-			s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-				Content: errorTickersMsg,
-			})
-		}
+	// Delete the interrim message, since it cannot be edited w/ files
+	s.ChannelMessageDelete(msg.ChannelID, msg.ID)
+	for _, file := range files {
+		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+			Files: []*discordgo.File{file},
+		})
+	}
+	if len(tickerErrorStack) > 0 {
+		joinedTickerStack := strings.Join(tickerErrorStack, ", ")
+		errorTickersMsg := fmt.Sprintf("**`%d`** tickers could not be loaded: ``%s``", len(tickerErrorStack), joinedTickerStack)
+		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+			Content: errorTickersMsg,
+		})
 	}
 }

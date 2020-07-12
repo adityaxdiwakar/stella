@@ -14,6 +14,7 @@ import (
 )
 
 var startTime time.Time
+var chartsServed int64
 var messagesSeen int64
 
 func init() {
