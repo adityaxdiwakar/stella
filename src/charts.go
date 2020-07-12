@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,7 +13,7 @@ import (
 	"github.com/google/go-querystring/query"
 )
 
-type FinvizQueryStruct struct {
+type FinvizEquityQueryStruct struct {
 	Ticker    string `url:"t"`
 	Type      string `url:"ty"`
 	Technials string `url:"ta"`
@@ -20,7 +21,21 @@ type FinvizQueryStruct struct {
 	Size      string `url:"s"`
 }
 
-func finvizChartHandler(ticker string, timeframe int8) (string, error) {
+func finvizCheckContentLength(chartUrl string) error {
+	res, err := http.Head(chartUrl)
+	if err != nil {
+		return errors.New("Error getting HEAD of chart image")
+	}
+
+	if res.ContentLength < 7500 {
+		return errors.New("Chart is too small, most likely empty")
+	}
+
+	return nil
+
+}
+
+func finvizEquityChartHandler(ticker string, timeframe int8) (string, error) {
 
 	if len(ticker) > 8 {
 		return "", errors.New("Ticker is too long, not moving forward")
@@ -35,7 +50,7 @@ func finvizChartHandler(ticker string, timeframe int8) (string, error) {
 		binaryTA = 1
 	}
 
-	queryParams := FinvizQueryStruct{
+	queryParams := FinvizEquityQueryStruct{
 		Ticker:    ticker,
 		Type:      "c",
 		Technials: strconv.Itoa(binaryTA),
@@ -55,17 +70,47 @@ func finvizChartHandler(ticker string, timeframe int8) (string, error) {
 	qStr, _ := query.Values(queryParams)
 	chartUrl := fmt.Sprintf("%s?%s", rootUrl, qStr.Encode())
 
-	res, err := http.Head(chartUrl)
-	if err != nil {
-		return "", errors.New("Error getting HEAD of chart image")
-	}
-
-	if res.ContentLength < 7500 {
-		return "", errors.New("Chart is too small, most likely empty")
+	if finvizCheckContentLength(chartUrl) != nil {
+		return "", errors.New("Content Length check failed")
 	}
 
 	return chartUrl, nil
+}
 
+type FinvizFuturesQueryStruct struct {
+	Ticker string `url:"t"`
+	Period string `url:"p"`
+	Size   string `url:"s"`
+}
+
+func finvizFuturesChartHandler(ticker string, timeframe int8) (string, error) {
+
+	// No futures tickers are longer than 4 characters, therefore this is a hard limit
+	if len(ticker) > 4 {
+		return "", errors.New("Ticker is too long, not moving forward")
+	}
+
+	// Timeframes for translating to Finviz-Query language
+	timeframes := []string{"m5", "h1", "d1", "w1", "m1"}
+
+	queryParams := FinvizEquityQueryStruct{
+		Ticker: ticker,
+		Period: timeframes[timeframe],
+		Size:   "l",
+	}
+
+	rootUrl := "https://charts.aditya.diwakar.io/fut_chart.ashx"
+
+	qStr, _ := query.Values(queryParams)
+	chartUrl := fmt.Sprintf("%s?%s", rootUrl, qStr.Encode())
+
+	if finvizCheckContentLength(chartUrl) != nil {
+		return "", errors.New("Content Length check failed")
+	}
+
+	log.Println(chartUrl)
+
+	return chartUrl, nil
 }
 
 func finvizChartUrlDownloader(Url string) (discordgo.File, error) {
@@ -77,7 +122,7 @@ func finvizChartUrlDownloader(Url string) (discordgo.File, error) {
 	return discordgo.File{Name: "chart.png", Reader: resp.Body}, nil
 }
 
-func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string) {
+func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string, isFutures bool) {
 	msg, err := s.ChannelMessageSend(m.ChannelID, ":clock1: Fetching your chart, stand by.")
 	if err != nil {
 		// An error occured that stopped the queue message from being sent, cancel progression
@@ -86,10 +131,26 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 
 	intChartType := int8(-1)
 	if len(mSplit[0]) == 1 || unicode.IsLetter(rune(mSplit[0][1])) {
-		intChartType = 5
+		if isFutures {
+			intChartType = 1
+		} else {
+			intChartType = 5
+		} // Default values
 	} else {
 		uncastedChartType, _ := strconv.Atoi(string(mSplit[0][1]))
 		intChartType = int8(uncastedChartType)
+	}
+
+	if (intChartType > 5 || intChartType < 1) && isFutures {
+		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "You've requested an invalid chart timeframe, choose between 1 and 5.")
+		return
+	} else if (intChartType > 7 || intChartType < 0) && !isFutures {
+		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "You've requested an invalid chart timeframe, choose between 0 and 7.")
+		return
+	}
+
+	if isFutures {
+		intChartType--
 	}
 
 	tickers := unique(mSplit[1:])
@@ -97,7 +158,13 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 	var files []*discordgo.File
 	var tickerErrorStack []string
 	for _, ticker := range tickers {
-		chartUrl, err := finvizChartHandler(ticker, intChartType)
+		var chartUrl string
+		var err error
+		if isFutures {
+			chartUrl, err = finvizFuturesChartHandler(ticker, intChartType)
+		} else {
+			chartUrl, err = finvizEquityChartHandler(ticker, intChartType)
+		}
 		if err != nil {
 			tickerErrorStack = append(tickerErrorStack, ticker)
 		} else {

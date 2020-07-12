@@ -71,7 +71,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		ping(s, m)
 
 	case strings.HasPrefix(mSplit[0], "c"):
-		finvizChartSender(s, m, mSplit)
+		finvizChartSender(s, m, mSplit, false)
+
+	case strings.HasPrefix(mSplit[0], "f"):
+		finvizChartSender(s, m, mSplit, true)
 
 	case mSplit[0] == "v":
 		stellaVersion(s, m)
