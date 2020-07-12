@@ -194,6 +194,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 	}
 
 	chartsServed += len(tickers)
+	rdb.IncrBy(ctx, "stats.charts.served", int64(len(tickers)))
 
 	var files []*discordgo.File
 	var tickerErrorStack []string

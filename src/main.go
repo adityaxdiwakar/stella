@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math/rand"
@@ -11,12 +12,15 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 )
 
 var startTime time.Time
 var chartsServed int
 var messagesSeen int64
+var ctx = context.Background()
+var rdb *redis.Client
 
 func init() {
 	startTime = time.Now()
@@ -27,6 +31,16 @@ func init() {
 	}
 
 	rand.Seed(time.Now().Unix()) // global pseudo random generator
+
+	rdb = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+	_, err = rdb.Ping(ctx).Result()
+	if err != nil {
+		log.Fatal("Could not make connection with Redis")
+	}
 }
 
 func uptime() string {
@@ -58,6 +72,7 @@ func main() {
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	messagesSeen += 1
+	rdb.Incr(ctx, "stats.msgs.seen")
 
 	// Check if the prefix is mentioned by using strings.HasPrefix
 	if !strings.HasPrefix(m.Content, os.Getenv("PREFIX")) {
@@ -110,6 +125,14 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 	} else {
 		title = "About Stella"
 	}
+
+	lifetimeMessagesSeen, msgsErr := rdb.Get(ctx, "stats.msgs.seen").Result()
+	lifetimeChartsServed, chartsErr := rdb.Get(ctx, "stats.charts.served").Result()
+
+	if msgsErr != nil || chartsErr != nil {
+		s.ChannelMessageSend(m.ChannelID, "Could not get the lifetime statistics, try again later.")
+	}
+
 	embed := &discordgo.MessageEmbed{
 		Color:       0x00cd6e,
 		Title:       title,
@@ -121,7 +144,14 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 					fmt.Sprintf("**Messages Seen**: %d", messagesSeen),
 					fmt.Sprintf("**Charts Served:** %d", chartsServed),
 					fmt.Sprintf("**Uptime**: %s", uptime()),
-					fmt.Sprintf("**Version**: v0.25"),
+					fmt.Sprintf("**Version**: v0.3"),
+				),
+			},
+			&discordgo.MessageEmbedField{
+				Name: "Lifetime Statistics",
+				Value: fmt.Sprintf("%s\n%s",
+					fmt.Sprintf("**Messages Seen**: %s", lifetimeMessagesSeen),
+					fmt.Sprintf("**Charts Served**: %s", lifetimeChartsServed),
 				),
 			},
 		},
