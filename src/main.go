@@ -98,9 +98,15 @@ func unique(strSlice []string) []string {
 }
 
 func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
+	var title string
+	if os.Getenv("ENV") == "DEV" {
+		title = "About Stella [Dev]"
+	} else {
+		title = "About Stella"
+	}
 	embed := &discordgo.MessageEmbed{
 		Color:       0x00cd6e,
-		Title:       "About Stella",
+		Title:       title,
 		Description: "Discord Bot for Financial Markets",
 		Fields: []*discordgo.MessageEmbedField{
 			&discordgo.MessageEmbedField{
