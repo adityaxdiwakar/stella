@@ -182,6 +182,8 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 
 	tickers := unique(mSplit[1:])
 
+	chartsServed += len(tickers)
+
 	var files []*discordgo.File
 	var tickerErrorStack []string
 	for _, ticker := range tickers {

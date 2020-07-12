@@ -14,7 +14,7 @@ import (
 )
 
 var startTime time.Time
-var chartsServed int64
+var chartsServed int
 var messagesSeen int64
 
 func init() {
@@ -105,10 +105,11 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 		Fields: []*discordgo.MessageEmbedField{
 			&discordgo.MessageEmbedField{
 				Name: "Status",
-				Value: fmt.Sprintf("%s\n%s\n%s",
+				Value: fmt.Sprintf("%s\n%s\n%s\n%s",
 					fmt.Sprintf("**Messages Seen**: %d", messagesSeen),
+					fmt.Sprintf("**Charts Served:** %d", chartsServed),
 					fmt.Sprintf("**Uptime**: %s", uptime()),
-					fmt.Sprintf("**Version**: v0.2"),
+					fmt.Sprintf("**Version**: v0.21"),
 				),
 			},
 		},
