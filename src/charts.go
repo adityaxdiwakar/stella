@@ -156,6 +156,12 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		return
 	}
 
+	if len(mSplit[0]) > 1 {
+		if _, err := strconv.Atoi(string(mSplit[0][1])); err != nil {
+			// The second character of the command is not an integer but the length is 2, therefore invalid
+		}
+	}
+
 	intChartType := int8(-1)
 	if len(mSplit[0]) == 1 || unicode.IsLetter(rune(mSplit[0][1])) {
 		if isFutures || isForex {
