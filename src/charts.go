@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -107,8 +106,6 @@ func finvizFuturesChartHandler(ticker string, timeframe int8) (string, error) {
 	if finvizCheckContentLength(chartUrl) != nil {
 		return "", errors.New("Content Length check failed")
 	}
-
-	log.Println(chartUrl)
 
 	return chartUrl, nil
 }

@@ -105,7 +105,7 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 				Value: fmt.Sprintf("%s\n%s\n%s",
 					fmt.Sprintf("**Messages Seen**: %d", messagesSeen),
 					fmt.Sprintf("**Uptime**: %s", uptime()),
-					fmt.Sprintf("**Version**: v0.12"),
+					fmt.Sprintf("**Version**: v0.2rc1"),
 				),
 			},
 		},
