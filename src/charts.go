@@ -249,12 +249,15 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		}
 	}
 
-	// Delete the interrim message, since it cannot be edited w/ files
 	s.ChannelMessageDelete(msg.ChannelID, msg.ID)
-	s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-		Content: fmt.Sprintf("Here is your %s chart", finvizChartTimeframeTranslator(timeframeMessage)),
-		Files:   files,
-	})
+	if len(tickerErrorStack) != len(tickers) {
+		// Delete the interrim message, since it cannot be edited w/ files
+		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+			Content: fmt.Sprintf("Here is your %s chart", finvizChartTimeframeTranslator(timeframeMessage)),
+			Files:   files,
+		})
+	}
+
 	if len(tickerErrorStack) > 0 {
 		joinedTickerStack := strings.Join(tickerErrorStack, ", ")
 		errorTickersMsg := fmt.Sprintf("**`%d`** tickers could not be loaded: ``%s``", len(tickerErrorStack), joinedTickerStack)
