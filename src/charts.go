@@ -34,10 +34,10 @@ func finvizCheckContentLength(chartUrl string) error {
 
 }
 
-func finvizEquityChartHandler(ticker string, timeframe int8) (string, error) {
+func finvizEquityChartHandler(ticker string, timeframe int8) (string, string, error) {
 
 	if len(ticker) > 8 {
-		return "", errors.New("Ticker is too long, not moving forward")
+		return "", "", errors.New("Ticker is too long, not moving forward")
 	}
 
 	// Timeframes for translations to Finviz-Query language
@@ -70,10 +70,10 @@ func finvizEquityChartHandler(ticker string, timeframe int8) (string, error) {
 	chartUrl := fmt.Sprintf("%s?%s", rootUrl, qStr.Encode())
 
 	if finvizCheckContentLength(chartUrl) != nil {
-		return "", errors.New("Content Length check failed")
+		return "", "", errors.New("Content Length check failed")
 	}
 
-	return chartUrl, nil
+	return chartUrl, timeframes[timeframe], nil
 }
 
 type FinvizFuturesQueryStruct struct {
@@ -82,11 +82,11 @@ type FinvizFuturesQueryStruct struct {
 	Size   string `url:"s"`
 }
 
-func finvizFuturesChartHandler(ticker string, timeframe int8) (string, error) {
+func finvizFuturesChartHandler(ticker string, timeframe int8) (string, string, error) {
 
 	// No futures tickers are longer than 4 characters, therefore this is a hard limit
 	if len(ticker) > 4 {
-		return "", errors.New("Ticker is too long, not moving forward")
+		return "", "", errors.New("Ticker is too long, not moving forward")
 	}
 
 	// Timeframes for translating to Finviz-Query language
@@ -104,16 +104,16 @@ func finvizFuturesChartHandler(ticker string, timeframe int8) (string, error) {
 	chartUrl := fmt.Sprintf("%s?%s", rootUrl, qStr.Encode())
 
 	if finvizCheckContentLength(chartUrl) != nil {
-		return "", errors.New("Content Length check failed")
+		return "", "", errors.New("Content Length check failed")
 	}
 
-	return chartUrl, nil
+	return chartUrl, timeframes[timeframe], nil
 }
 
-func finvizForexChartHandler(ticker string, timeframe int8) (string, error) {
+func finvizForexChartHandler(ticker string, timeframe int8) (string, string, error) {
 	// No forex tickers are longer than 9 characters, hard limit
 	if len(ticker) > 9 {
-		return "", errors.New("Ticker is too long, not moving forward")
+		return "", "", errors.New("Ticker is too long, not moving forward")
 	}
 
 	ticker = strings.ToUpper(ticker)
@@ -128,16 +128,16 @@ func finvizForexChartHandler(ticker string, timeframe int8) (string, error) {
 		}
 	}
 	if !isValid {
-		return "", errors.New("Forex ticker provided is not in list, cannot continue")
+		return "", "", errors.New("Forex ticker provided is not in list, cannot continue")
 	}
 
 	chartUrl := fmt.Sprintf("https://charts.aditya.diwakar.io/fx_image.ashx?%s_%s_l.png", ticker, timeframes[timeframe])
 
 	if finvizCheckContentLength(chartUrl) != nil {
-		return "", errors.New("Content length check failed, cannot continue")
+		return "", "", errors.New("Content length check failed, cannot continue")
 	}
 
-	return chartUrl, nil
+	return chartUrl, timeframes[timeframe], nil
 }
 
 func finvizChartUrlDownloader(Url string, ticker string) (discordgo.File, error) {
@@ -147,6 +147,27 @@ func finvizChartUrlDownloader(Url string, ticker string) (discordgo.File, error)
 	}
 
 	return discordgo.File{Name: fmt.Sprintf("%s.png", ticker), Reader: resp.Body}, nil
+}
+
+func finvizChartTimeframeTranslator(timeframe string) string {
+	translationMap := map[string]string{
+		"i1":  "1-minute intraday",
+		"i3":  "3-minute intraday",
+		"i5":  "5-minute intraday",
+		"i15": "15-minute intraday",
+		"i30": "30-minute intraday",
+		"d":   "daily",
+		"w":   "weekly",
+		"m":   "monthly",
+		"m5":  "5-minute",
+		"h1":  "hourly",
+		"d1":  "daily",
+		"w1":  "weekly",
+		"m1":  "monthly",
+		"mo":  "monthly",
+	}
+
+	return translationMap[timeframe]
 }
 
 func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string, isFutures bool, isForex bool) {
@@ -196,6 +217,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 	chartsServed += len(tickers)
 	rdb.IncrBy(ctx, "stats.charts.served", int64(len(tickers)))
 
+	var timeframeMessage string
 	var files []*discordgo.File
 	var tickerErrorStack []string
 	for _, ticker := range tickers {
@@ -205,13 +227,13 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		switch {
 
 		case isFutures:
-			chartUrl, err = finvizFuturesChartHandler(ticker, intChartType)
+			chartUrl, timeframeMessage, err = finvizFuturesChartHandler(ticker, intChartType)
 
 		case isForex:
-			chartUrl, err = finvizForexChartHandler(ticker, intChartType)
+			chartUrl, timeframeMessage, err = finvizForexChartHandler(ticker, intChartType)
 
 		default:
-			chartUrl, err = finvizEquityChartHandler(ticker, intChartType)
+			chartUrl, timeframeMessage, err = finvizEquityChartHandler(ticker, intChartType)
 
 		}
 
@@ -230,7 +252,8 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 	// Delete the interrim message, since it cannot be edited w/ files
 	s.ChannelMessageDelete(msg.ChannelID, msg.ID)
 	s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-		Files: files,
+		Content: fmt.Sprintf("Here is your %s chart", finvizChartTimeframeTranslator(timeframeMessage)),
+		Files:   files,
 	})
 	if len(tickerErrorStack) > 0 {
 		joinedTickerStack := strings.Join(tickerErrorStack, ", ")
