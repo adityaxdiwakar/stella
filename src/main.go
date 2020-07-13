@@ -131,6 +131,7 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if msgsErr != nil || chartsErr != nil {
 		s.ChannelMessageSend(m.ChannelID, "Could not get the lifetime statistics, try again later.")
+		return
 	}
 
 	embed := &discordgo.MessageEmbed{
@@ -144,7 +145,7 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 					fmt.Sprintf("Messages Seen: **%d**", messagesSeen),
 					fmt.Sprintf("Charts Served: **%d**", chartsServed),
 					fmt.Sprintf("Uptime: **%s**", uptime()),
-					fmt.Sprintf("Version: **v0.32**"),
+					fmt.Sprintf("Version: **v0.33**"),
 				),
 			},
 			&discordgo.MessageEmbedField{
