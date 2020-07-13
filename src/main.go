@@ -144,7 +144,7 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 					fmt.Sprintf("Messages Seen: **%d**", messagesSeen),
 					fmt.Sprintf("Charts Served: **%d**", chartsServed),
 					fmt.Sprintf("Uptime: **%s**", uptime()),
-					fmt.Sprintf("Version: **v0.31**"),
+					fmt.Sprintf("Version: **v0.32**"),
 				),
 			},
 			&discordgo.MessageEmbedField{
