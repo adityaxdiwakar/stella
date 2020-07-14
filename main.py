@@ -33,19 +33,10 @@ import ast
 
 # {prefix: component}
 module_links = {
-    "deltag": refs.rm_tag,
     "fun": tdcommands.fundamentals,
     "div": tdcommands.dividends,
-    "ngall": ng_all.main,
-    "rc": ng_rep.custom,
-    "anom": ng_rep.all_anom,
-    "r": ng_rep.main,
     "earnings": earnings.company,
-    "addtag": refs.add_ref,
-    "showtags": refs.show_tags,
-    "tag": refs.use_tag,
     "eval": evalmod.main,
-    "pos": position_size.calculator,
     "vixc": vixcentral.main
 }
 
