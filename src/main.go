@@ -4,10 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"golang.org/x/text/message"
 	"log"
 	"math/rand"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -24,6 +26,7 @@ var messagesSeen int64
 var ctx = context.Background()
 var rdb *redis.Client
 var db *sql.DB
+var printer *message.Printer
 
 const (
 	host     = "localhost"
@@ -71,6 +74,9 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// establish english printer
+	printer = message.NewPrinter(message.MatchLanguage("en"))
 }
 
 func uptime() string {
@@ -170,8 +176,11 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 		title = "About Stella"
 	}
 
-	lifetimeMessagesSeen, msgsErr := rdb.Get(ctx, "stats.msgs.seen").Result()
-	lifetimeChartsServed, chartsErr := rdb.Get(ctx, "stats.charts.served").Result()
+	lifetimeMessagesSeenStr, msgsErr := rdb.Get(ctx, "stats.msgs.seen").Result()
+	lifetimeChartsServedStr, chartsErr := rdb.Get(ctx, "stats.charts.served").Result()
+
+	lifetimeMessagesSeen, msgsErr := strconv.Atoi(lifetimeMessagesSeenStr)
+	lifetimeChartsServed, chartsErr := strconv.Atoi(lifetimeChartsServedStr)
 
 	if msgsErr != nil || chartsErr != nil {
 		s.ChannelMessageSend(m.ChannelID, "Could not get the lifetime statistics, try again later.")
@@ -186,17 +195,17 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 			&discordgo.MessageEmbedField{
 				Name: "Status",
 				Value: fmt.Sprintf("%s\n%s\n%s\n%s",
-					fmt.Sprintf("Messages Seen: **%d**", messagesSeen),
-					fmt.Sprintf("Charts Served: **%d**", chartsServed),
-					fmt.Sprintf("Uptime: **%s**", uptime()),
-					fmt.Sprintf("Version: **v0.41**"),
+					printer.Sprintf("Messages Seen: **%d**", messagesSeen),
+					printer.Sprintf("Charts Served: **%d**", chartsServed),
+					printer.Sprintf("Uptime: **%s**", uptime()),
+					printer.Sprintf("Version: **v0.42**"),
 				),
 			},
 			&discordgo.MessageEmbedField{
 				Name: "Lifetime Statistics",
 				Value: fmt.Sprintf("%s\n%s",
-					fmt.Sprintf("Messages Seen: **%s**", lifetimeMessagesSeen),
-					fmt.Sprintf("Charts Served: **%s**", lifetimeChartsServed),
+					printer.Sprintf("Messages Seen: **%d**", lifetimeMessagesSeen),
+					printer.Sprintf("Charts Served: **%d**", lifetimeChartsServed),
 				),
 			},
 		},

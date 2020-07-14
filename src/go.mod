@@ -8,4 +8,5 @@ require (
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/joho/godotenv v1.3.0 // indirect
 	github.com/lib/pq v1.7.0 // indirect
+	golang.org/x/text v0.3.3 // indirect
 )
