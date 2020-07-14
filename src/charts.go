@@ -224,6 +224,13 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		var chartUrl string
 		var err error
 
+		// override tickers (a/b shares and russell-2k, see #5)
+		if ticker == "rty" {
+			ticker = "er2"
+		}
+
+		ticker = strings.ReplaceAll(ticker, ".", "-")
+
 		switch {
 
 		case isFutures:
