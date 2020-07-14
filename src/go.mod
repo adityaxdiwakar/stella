@@ -7,4 +7,5 @@ require (
 	github.com/go-redis/redis/v8 v8.0.0-beta.6 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/joho/godotenv v1.3.0 // indirect
+	github.com/lib/pq v1.7.0 // indirect
 )

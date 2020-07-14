@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"math/rand"
@@ -14,6 +15,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 var startTime time.Time
@@ -21,25 +23,53 @@ var chartsServed int
 var messagesSeen int64
 var ctx = context.Background()
 var rdb *redis.Client
+var db *sql.DB
+
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "postgres"
+	password = "password"
+	dbname   = "stella"
+)
 
 func init() {
+	// initialize the global starttime, for uptime calculations
 	startTime = time.Now()
 
+	// load the dotenv file for environment variables
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	rand.Seed(time.Now().Unix()) // global pseudo random generator
+	// global pseudo random generator
+	rand.Seed(time.Now().Unix())
 
+	// establish connection with Redis DB
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
 		DB:       0,
 	})
+	// ping rdb to test, use context for the situation
 	_, err = rdb.Ping(ctx).Result()
 	if err != nil {
 		log.Fatal("Could not make connection with Redis")
+	}
+
+	pSqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+
+	db, err = sql.Open("postgres", pSqlInfo)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -48,6 +78,8 @@ func uptime() string {
 }
 
 func main() {
+	defer db.Close()
+
 	dg, err := discordgo.New("Bot " + os.Getenv("BOT_TOKEN"))
 	if err != nil {
 		fmt.Println("Error creating Discord Session due to:", err)
