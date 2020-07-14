@@ -135,6 +135,18 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case mSplit[0] == "v":
 		stellaVersion(s, m)
 
+	case mSplit[0] == "addtag":
+		addTag(s, m, mSplit)
+
+	case mSplit[0] == "tag":
+		retrieveTag(s, m, mSplit)
+
+	case mSplit[0] == "deltag":
+		deleteTag(s, m, mSplit)
+
+	case mSplit[0] == "showtags":
+		showTags(s, m)
+
 	}
 }
 
