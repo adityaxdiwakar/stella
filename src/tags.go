@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 	"log"
 	//"github.com/bwmarrin/discordgo"
 )
@@ -19,15 +18,44 @@ func retrieveTagFromDb(tagName string) (string, error) {
 }
 
 func pushTagToDb(tagName string, tagContent string) error {
-	if _, err := retrieveTagFromDb(tagName); err != sql.ErrNoRows {
-		return errors.New("Tag already exists")
-	}
-
 	sqlStatement := `
         INSERT INTO tags (id, content)
-        VALUES ($1, $2)
-    `
+        VALUES ($1, $2)`
+
+	switch _, err := retrieveTagFromDb(tagName); err {
+	case nil:
+		sqlStatement = `
+            UPDATE tags
+            SET content = $2
+            WHERE id = $1
+        `
+
+	case sql.ErrNoRows:
+		break
+
+	default:
+		return err
+
+	}
+
 	_, err := db.Exec(sqlStatement, tagName, tagContent)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func deleteTagFromDb(tagName string) error {
+	sqlStatement := `DELETE FROM tags WHERE ID = $1`
+
+	_, err := retrieveTagFromDb(tagName)
+	if err == sql.ErrNoRows {
+		return sql.ErrNoRows
+	} else if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(sqlStatement, tagName)
 	if err != nil {
 		return err
 	}
