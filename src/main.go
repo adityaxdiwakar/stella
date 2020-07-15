@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"golang.org/x/text/message"
 	"log"
 	"math/rand"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"golang.org/x/text/message"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/go-redis/redis/v8"
@@ -194,11 +195,12 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 		Fields: []*discordgo.MessageEmbedField{
 			&discordgo.MessageEmbedField{
 				Name: "Status",
-				Value: fmt.Sprintf("%s\n%s\n%s\n%s",
+				Value: fmt.Sprintf("%s\n%s\n%s\n%s\n%s",
 					printer.Sprintf("Messages Seen: **%d**", messagesSeen),
 					printer.Sprintf("Charts Served: **%d**", chartsServed),
 					printer.Sprintf("Uptime: **%s**", uptime()),
 					printer.Sprintf("Version: **v0.42**"),
+					printer.Sprintf("Heartbeat Latency: **%dms**", s.HeartbeatLatency().Milliseconds()),
 				),
 			},
 			&discordgo.MessageEmbedField{
