@@ -63,7 +63,7 @@ func finvizEquityChartHandler(ticker string, timeframe int8) (string, string, er
 	}
 
 	if timeframe == 5 {
-		queryParams.Technials = "st_c,sch_200p,sma_50,sma_200,sma_20,sma_100,bb_20_2,rsi_b_14,macd_b_12_26_9,stofu_b_14_3_3"
+		queryParams.Technials = "st_c,sch_200p,sma_20,sma_50,sma_200,rsi_b_14,macd_b_12_26_9"
 	}
 
 	qStr, _ := query.Values(queryParams)
