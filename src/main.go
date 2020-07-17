@@ -13,12 +13,12 @@ import (
 	"syscall"
 	"time"
 
-	"golang.org/x/text/message"
-
+	tda "github.com/adityaxdiwakar/tda-go"
 	"github.com/bwmarrin/discordgo"
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"golang.org/x/text/message"
 )
 
 var startTime time.Time
@@ -28,6 +28,7 @@ var ctx = context.Background()
 var rdb *redis.Client
 var db *sql.DB
 var printer *message.Printer
+var tds tda.Session
 
 const (
 	host     = "localhost"
@@ -78,6 +79,15 @@ func init() {
 
 	// establish english printer
 	printer = message.NewPrinter(message.MatchLanguage("en"))
+
+	log.Println(os.Getenv("REFRESH_KEY"))
+	// intitialize tda lib
+	tds = tda.Session{
+		Refresh:     os.Getenv("REFRESH_KEY"),
+		ConsumerKey: os.Getenv("CONSUMER_KEY"),
+		RootUrl:     "https://api.tdameritrade.com/v1",
+	}
+	tds.InitSession()
 }
 
 func uptime() string {
@@ -86,6 +96,8 @@ func uptime() string {
 
 func main() {
 	defer db.Close()
+
+	log.Println(getRequiredFundamentals("AAPL"))
 
 	dg, err := discordgo.New("Bot " + os.Getenv("BOT_TOKEN"))
 	if err != nil {
