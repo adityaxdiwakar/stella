@@ -80,7 +80,6 @@ func init() {
 	// establish english printer
 	printer = message.NewPrinter(message.MatchLanguage("en"))
 
-	log.Println(os.Getenv("REFRESH_KEY"))
 	// intitialize tda lib
 	tds = tda.Session{
 		Refresh:     os.Getenv("REFRESH_KEY"),
@@ -96,8 +95,6 @@ func uptime() string {
 
 func main() {
 	defer db.Close()
-
-	log.Println(getRequiredFundamentals("AAPL"))
 
 	dg, err := discordgo.New("Bot " + os.Getenv("BOT_TOKEN"))
 	if err != nil {
@@ -138,6 +135,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	case mSplit[0] == "ping":
 		ping(s, m)
+
+	case mSplit[0] == "fun":
+		sendFundamentals(s, m, mSplit)
 
 	case strings.HasPrefix(mSplit[0], "c"):
 		finvizChartSender(s, m, mSplit, false, false)
@@ -211,7 +211,7 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 					printer.Sprintf("Messages Seen: **%d**", messagesSeen),
 					printer.Sprintf("Charts Served: **%d**", chartsServed),
 					printer.Sprintf("Uptime: **%s**", uptime()),
-					printer.Sprintf("Version: **v0.44**"),
+					printer.Sprintf("Version: **v0.5**"),
 					printer.Sprintf("Heartbeat Latency: **%dms**", s.HeartbeatLatency().Milliseconds()),
 				),
 			},

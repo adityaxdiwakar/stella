@@ -12,3 +12,5 @@ require (
 	github.com/lib/pq v1.7.0 // indirect
 	golang.org/x/text v0.3.3 // indirect
 )
+
+replace github.com/adityaxdiwakar/tda-go => /home/aditya/go/src/github.com/adityaxdiwakar/tda-go
