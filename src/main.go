@@ -136,6 +136,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case mSplit[0] == "ping":
 		ping(s, m)
 
+	case mSplit[0] == "name":
+		sendCompanyName(s, m, mSplit)
+
 	case mSplit[0] == "fun":
 		sendFundamentals(s, m, mSplit)
 

@@ -112,7 +112,7 @@ func sendFundamentals(s *discordgo.Session, m *discordgo.MessageCreate, mSplit [
 	}
 
 	embed := &discordgo.MessageEmbed{
-		Title:  fmt.Sprintf("[%s] %s", *tdaTicker, *tdaDescription),
+		Title:  fmt.Sprintf("[%s] %s Fundamentals", *tdaTicker, *tdaDescription),
 		Fields: createEmbed(reflect.TypeOf(ShortListFundamentals{}), reflect.ValueOf(*shortList)),
 	}
 
@@ -143,9 +143,35 @@ func sendDividends(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []st
 	}
 
 	embed := &discordgo.MessageEmbed{
-		Title:  fmt.Sprintf("[%s] %s", *tdaTicker, *tdaDescription),
+		Title:  fmt.Sprintf("[%s] %s Dividend", *tdaTicker, *tdaDescription),
 		Fields: createEmbed(reflect.TypeOf(ShortListDiviends{}), reflect.ValueOf(*shortList)),
 	}
 
 	s.ChannelMessageSendEmbed(m.ChannelID, embed)
+}
+
+func sendCompanyName(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string) {
+	if len(mSplit) < 2 {
+		s.ChannelMessageSend(m.ChannelID, "Please provide a ticker to look up dividend information for!")
+		return
+	}
+
+	ticker := mSplit[1]
+	_, tdaTicker, tdaDescription, err := getRequiredFundamentals(ticker)
+
+	switch err {
+	case nil:
+		break
+
+	case tda.FundamentalsEmpty:
+		s.ChannelMessageSend(m.ChannelID, "That ticker could not be looked up unfortunately, try again.")
+		return
+
+	default:
+		s.ChannelMessageSend(m.ChannelID, "Something went wrong while processing the company name, try again later.")
+		return
+	}
+
+	messageToSend := fmt.Sprintf("**`%s`** is %s", *tdaTicker, *tdaDescription)
+	s.ChannelMessageSend(m.ChannelID, messageToSend)
 }
