@@ -139,6 +139,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case mSplit[0] == "fun":
 		sendFundamentals(s, m, mSplit)
 
+	case mSplit[0] == "div":
+		sendDividends(s, m, mSplit)
+
 	case strings.HasPrefix(mSplit[0], "c"):
 		finvizChartSender(s, m, mSplit, false, false)
 
