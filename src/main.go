@@ -131,7 +131,8 @@ func main() {
           //     ******      //
           //       **        //
                    **
-   `)
+
+    `)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
@@ -262,7 +263,7 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func channelTicker(s *discordgo.Session) {
-	for range time.Tick(10 * time.Second) {
+	for range time.Tick(300 * time.Second) {
 		price, change, percentage, err := getFuturesData()
 		if err != nil {
 			log.Println("[ticker] Could not retrieve futures data for profile status")
