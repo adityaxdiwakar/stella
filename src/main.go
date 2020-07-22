@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -29,6 +31,9 @@ var rdb *redis.Client
 var db *sql.DB
 var printer *message.Printer
 var tds tda.Session
+var tickerChannels []string
+
+var stellaHttpClient = &http.Client{Timeout: 10 * time.Second}
 
 const (
 	host     = "localhost"
@@ -103,6 +108,8 @@ func main() {
 	}
 
 	dg.AddHandler(messageCreate)
+	go channelTicker(dg)
+	go playingTicker(dg)
 
 	err = dg.Open()
 	if err != nil {
@@ -110,10 +117,25 @@ func main() {
 		return
 	}
 
-	fmt.Println("Bot is now running. Press CTRL-C to exit.")
+	fmt.Println(`
+
+	  Stella is now loaded.
+
+
+          //       **        //
+        //////     **      //////
+        //////     **      //////
+        //////   ******    //////
+        //////   ******    //////
+        //////   ******    //////
+          //     ******      //
+          //       **        //
+                   **
+   `)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
+	fmt.Println("Interrupt received, terminating Stella.")
 
 	dg.Close()
 }
@@ -211,17 +233,17 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 		Title:       title,
 		Description: "Discord Bot for Financial Markets",
 		Fields: []*discordgo.MessageEmbedField{
-			&discordgo.MessageEmbedField{
+			{
 				Name: "Status",
 				Value: fmt.Sprintf("%s\n%s\n%s\n%s\n%s",
 					printer.Sprintf("Messages Seen: **%d**", messagesSeen),
 					printer.Sprintf("Charts Served: **%d**", chartsServed),
 					printer.Sprintf("Uptime: **%s**", uptime()),
-					printer.Sprintf("Version: **v0.5**"),
+					printer.Sprintf("Version: **v0.6**"),
 					printer.Sprintf("Heartbeat Latency: **%dms**", s.HeartbeatLatency().Milliseconds()),
 				),
 			},
-			&discordgo.MessageEmbedField{
+			{
 				Name: "Lifetime Statistics",
 				Value: fmt.Sprintf("%s\n%s",
 					printer.Sprintf("Messages Seen: **%d**", lifetimeMessagesSeen),
@@ -237,4 +259,104 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 		},
 	}
 	s.ChannelMessageSendEmbed(m.ChannelID, embed)
+}
+
+func channelTicker(s *discordgo.Session) {
+	for range time.Tick(10 * time.Second) {
+		price, change, percentage, err := getFuturesData()
+		if err != nil {
+			log.Println("[ticker] Could not retrieve futures data for profile status")
+			continue
+		}
+		message := fmt.Sprintf("%.2f (%s, %s%%)", *price, *change, *percentage)
+		for _, channelID := range []string{"703080609358020608", "709860290694742098"} {
+			_, err := s.ChannelEdit(channelID, message)
+			if err != nil {
+				log.Printf("[ticker] Could not change channel title for %s due to: %v\n", channelID, err)
+			}
+		}
+	}
+}
+
+func playingTicker(s *discordgo.Session) {
+	for range time.Tick(15 * time.Second) {
+		price, _, percentage, err := getFuturesData()
+		if err != nil {
+			log.Println("[ticker] Could not retrieve futures data for profile status")
+			continue
+		}
+		message := fmt.Sprintf("%.2f (%s%%)", *price, *percentage)
+		s.UpdateStatusComplex(discordgo.UpdateStatusData{
+			Game: &discordgo.Game{
+				Name: message,
+				Type: discordgo.GameTypeWatching,
+			},
+		})
+	}
+}
+
+type FuturesPayload struct {
+	Code    int `json:"code"`
+	Payload struct {
+		Timestamp     int64 `json:"timestamp"`
+		ContractID    int   `json:"contract_id"`
+		SessionVolume int   `json:"session_volume"`
+		OpenInterest  int   `json:"open_interest"`
+		SessionPrices struct {
+			Open       float64 `json:"open"`
+			High       float64 `json:"high"`
+			Settlement float64 `json:"settlement"`
+			Low        float64 `json:"low"`
+		} `json:"session_prices"`
+		Depth struct {
+			Bid struct {
+				Price float64 `json:"price"`
+				Size  int     `json:"size"`
+			} `json:"bid"`
+			Ask struct {
+				Price float64 `json:"price"`
+				Size  int     `json:"size"`
+			} `json:"ask"`
+		} `json:"depth"`
+		Trade struct {
+			Price float64 `json:"price"`
+			Size  int     `json:"size"`
+		} `json:"trade"`
+	} `json:"payload"`
+}
+
+func getFuturesData() (*float64, *string, *string, error) {
+	res, err := stellaHttpClient.Get("https://md.aditya.diwakar.io/recent/")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	defer res.Body.Close()
+
+	httpPayload := FuturesPayload{}
+	err = json.NewDecoder(res.Body).Decode(&httpPayload)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	payload := httpPayload.Payload
+
+	price := payload.Trade.Price
+	numericalChange := price - payload.SessionPrices.Settlement
+	numericalPercentage := numericalChange / payload.SessionPrices.Settlement * 100
+	var change string
+	if numericalChange >= 0 {
+		change = fmt.Sprintf("+%.2f", numericalChange)
+	} else {
+		change = fmt.Sprintf("%.2f", numericalChange)
+	}
+
+	var percentage string
+	if numericalPercentage >= 0 {
+		percentage = fmt.Sprintf("+%.2f", numericalPercentage)
+	} else {
+		percentage = fmt.Sprintf("%.2f", numericalPercentage)
+	}
+
+	return &price, &change, &percentage, nil
 }
