@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"math/rand"
@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	tda "github.com/adityaxdiwakar/tda-go"
 	"github.com/bwmarrin/discordgo"
 	"github.com/go-redis/redis/v8"
@@ -32,18 +33,15 @@ var db *sql.DB
 var printer *message.Printer
 var tds tda.Session
 var tickerChannels []string
+var conf tomlConfig
 
 var stellaHttpClient = &http.Client{Timeout: 10 * time.Second}
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "password"
-	dbname   = "stella"
-)
-
 func init() {
+	if _, err := toml.DecodeFile("config.toml", &conf); err != nil {
+		log.Fatalf("error: could not parse configuration: %v\n", err)
+	}
+
 	// initialize the global starttime, for uptime calculations
 	startTime = time.Now()
 
@@ -58,9 +56,9 @@ func init() {
 
 	// establish connection with Redis DB
 	rdb = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
+		Addr:     conf.Redis.Address,
+		Password: conf.Redis.Password,
+		DB:       conf.Redis.DB,
 	})
 	// ping rdb to test, use context for the situation
 	_, err = rdb.Ping(ctx).Result()
@@ -68,9 +66,9 @@ func init() {
 		log.Fatal("Could not make connection with Redis")
 	}
 
-	pSqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+	pSqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s "+
+		"sslmode=disable", conf.Database.Host, conf.Database.Port,
+		conf.Database.User, conf.Database.Password, conf.Database.DBName)
 
 	db, err = sql.Open("postgres", pSqlInfo)
 	if err != nil {
@@ -83,12 +81,12 @@ func init() {
 	}
 
 	// establish english printer
-	printer = message.NewPrinter(message.MatchLanguage("en"))
+	printer = message.NewPrinter(message.MatchLanguage(conf.Language))
 
 	// intitialize tda lib
 	tds = tda.Session{
-		Refresh:     os.Getenv("REFRESH_KEY"),
-		ConsumerKey: os.Getenv("CONSUMER_KEY"),
+		Refresh:     conf.TDAmeritrade.RefreshToken,
+		ConsumerKey: conf.TDAmeritrade.ConsumerKey,
 		RootUrl:     "https://api.tdameritrade.com/v1",
 	}
 	tds.InitSession()
@@ -101,15 +99,23 @@ func uptime() string {
 func main() {
 	defer db.Close()
 
-	dg, err := discordgo.New("Bot " + os.Getenv("BOT_TOKEN"))
+	tickerPtr := flag.Bool("ticker", true, "ticker boolean")
+	flag.Parse()
+
+	dg, err := discordgo.New(fmt.Sprintf("Bot %s", conf.DiscordConfig.Token))
 	if err != nil {
 		fmt.Println("Error creating Discord Session due to:", err)
 		return
 	}
 
 	dg.AddHandler(messageCreate)
-	go channelTicker(dg)
-	go playingTicker(dg)
+
+	if *tickerPtr {
+		go channelTicker(dg)
+		go playingTicker(dg)
+	} else {
+		fmt.Println("Non-Default Boot: Ticker Feature Disabled")
+	}
 
 	err = dg.Open()
 	if err != nil {
@@ -122,17 +128,18 @@ func main() {
 	  Stella is now loaded.
 
 
-          //       **        //
-        //////     **      //////
-        //////     **      //////
-        //////   ******    //////
-        //////   ******    //////
-        //////   ******    //////
-          //     ******      //
-          //       **        //
+          //       **       //
+        //////     **     //////
+        //////     **     //////
+        //////   ******   //////
+        //////   ******   //////
+        //////   ******   //////
+          //     ******     //
+          //       **       //
                    **
 
     `)
+
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
@@ -146,7 +153,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	rdb.Incr(ctx, "stats.msgs.seen")
 
 	// Check if the prefix is mentioned by using strings.HasPrefix
-	if !strings.HasPrefix(m.Content, os.Getenv("PREFIX")) {
+	if !strings.HasPrefix(m.Content, conf.DiscordConfig.Prefix) {
 		return
 	}
 
@@ -212,7 +219,7 @@ func unique(strSlice []string) []string {
 
 func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var title string
-	if os.Getenv("ENV") == "DEV" {
+	if conf.DiscordConfig.Env == "dev" {
 		title = "About Stella [Dev]"
 	} else {
 		title = "About Stella"
@@ -260,104 +267,4 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 		},
 	}
 	s.ChannelMessageSendEmbed(m.ChannelID, embed)
-}
-
-func channelTicker(s *discordgo.Session) {
-	for range time.Tick(300 * time.Second) {
-		price, change, percentage, err := getFuturesData()
-		if err != nil {
-			log.Println("[ticker] Could not retrieve futures data for profile status")
-			continue
-		}
-		message := fmt.Sprintf("%.2f (%s, %s%%)", *price, *change, *percentage)
-		for _, channelID := range []string{"703080609358020608", "709860290694742098"} {
-			_, err := s.ChannelEdit(channelID, message)
-			if err != nil {
-				log.Printf("[ticker] Could not change channel title for %s due to: %v\n", channelID, err)
-			}
-		}
-	}
-}
-
-func playingTicker(s *discordgo.Session) {
-	for range time.Tick(15 * time.Second) {
-		price, _, percentage, err := getFuturesData()
-		if err != nil {
-			log.Println("[ticker] Could not retrieve futures data for profile status")
-			continue
-		}
-		message := fmt.Sprintf("%.2f (%s%%)", *price, *percentage)
-		s.UpdateStatusComplex(discordgo.UpdateStatusData{
-			Game: &discordgo.Game{
-				Name: message,
-				Type: discordgo.GameTypeWatching,
-			},
-		})
-	}
-}
-
-type FuturesPayload struct {
-	Code    int `json:"code"`
-	Payload struct {
-		Timestamp     int64 `json:"timestamp"`
-		ContractID    int   `json:"contract_id"`
-		SessionVolume int   `json:"session_volume"`
-		OpenInterest  int   `json:"open_interest"`
-		SessionPrices struct {
-			Open       float64 `json:"open"`
-			High       float64 `json:"high"`
-			Settlement float64 `json:"settlement"`
-			Low        float64 `json:"low"`
-		} `json:"session_prices"`
-		Depth struct {
-			Bid struct {
-				Price float64 `json:"price"`
-				Size  int     `json:"size"`
-			} `json:"bid"`
-			Ask struct {
-				Price float64 `json:"price"`
-				Size  int     `json:"size"`
-			} `json:"ask"`
-		} `json:"depth"`
-		Trade struct {
-			Price float64 `json:"price"`
-			Size  int     `json:"size"`
-		} `json:"trade"`
-	} `json:"payload"`
-}
-
-func getFuturesData() (*float64, *string, *string, error) {
-	res, err := stellaHttpClient.Get("https://md.aditya.diwakar.io/recent/")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	defer res.Body.Close()
-
-	httpPayload := FuturesPayload{}
-	err = json.NewDecoder(res.Body).Decode(&httpPayload)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	payload := httpPayload.Payload
-
-	price := payload.Trade.Price
-	numericalChange := price - payload.SessionPrices.Settlement
-	numericalPercentage := numericalChange / payload.SessionPrices.Settlement * 100
-	var change string
-	if numericalChange >= 0 {
-		change = fmt.Sprintf("+%.2f", numericalChange)
-	} else {
-		change = fmt.Sprintf("%.2f", numericalChange)
-	}
-
-	var percentage string
-	if numericalPercentage >= 0 {
-		percentage = fmt.Sprintf("+%.2f", numericalPercentage)
-	} else {
-		percentage = fmt.Sprintf("%.2f", numericalPercentage)
-	}
-
-	return &price, &change, &percentage, nil
 }

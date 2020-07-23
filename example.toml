@@ -1,0 +1,34 @@
+language = "en"
+
+[DiscordConfig]
+# discord bot token from discordapi.com/applications
+token = ""
+
+# prefix for the bot to respond to (what each command must begin with)
+prefix = "?"
+
+# environment specification
+env = "dev"
+
+# RDB credentials
+[Redis]
+address = "localhost:6379"
+password = ""
+DB = 0
+
+# PostgreSQL credentials
+[Database]
+host = "localhost"
+port = 5432
+user = "postgres"
+password = "password"
+dbname = "db"
+
+# TDAmeritrade Credentials
+[TDAmeritrade]
+refresh_token = ""
+consumer_key = ""
+
+# Channels for ticker feature to edit
+[TickerConfig]
+channels = ["1", "2"]
