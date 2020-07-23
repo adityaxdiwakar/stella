@@ -19,7 +19,6 @@ import (
 	tda "github.com/adityaxdiwakar/tda-go"
 	"github.com/bwmarrin/discordgo"
 	"github.com/go-redis/redis/v8"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"golang.org/x/text/message"
 )
@@ -45,12 +44,6 @@ func init() {
 	// initialize the global starttime, for uptime calculations
 	startTime = time.Now()
 
-	// load the dotenv file for environment variables
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	// global pseudo random generator
 	rand.Seed(time.Now().Unix())
 
@@ -61,7 +54,7 @@ func init() {
 		DB:       conf.Redis.DB,
 	})
 	// ping rdb to test, use context for the situation
-	_, err = rdb.Ping(ctx).Result()
+	_, err := rdb.Ping(ctx).Result()
 	if err != nil {
 		log.Fatal("Could not make connection with Redis")
 	}
@@ -158,7 +151,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	// If the prefix is present, remove the prefix for later handling
-	m.Content = m.Content[len(os.Getenv("PREFIX")):]
+	m.Content = m.Content[len(conf.DiscordConfig.Prefix):]
 	mSplit := strings.Split(m.Content, " ")
 
 	switch {
@@ -247,7 +240,7 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 					printer.Sprintf("Messages Seen: **%d**", messagesSeen),
 					printer.Sprintf("Charts Served: **%d**", chartsServed),
 					printer.Sprintf("Uptime: **%s**", uptime()),
-					printer.Sprintf("Version: **v0.7**"),
+					printer.Sprintf("Version: **v0.71**"),
 					printer.Sprintf("Heartbeat Latency: **%dms**", s.HeartbeatLatency().Milliseconds()),
 				),
 			},
