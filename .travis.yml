@@ -9,8 +9,11 @@ before_install:
 script:
   - docker images stella 
 
+after_success:
+  - make image
+
 deploy:
   provider: script
-  script: package.sh
+  script: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD && make push-image
   on:
     tags: true

@@ -6,7 +6,6 @@ help: ## help command for available tasks
 .DEFAULT_GOAL := help
 
 
-# Build the container
 build: ## build the container
 	docker build -t stella .
 
@@ -17,4 +16,9 @@ run: ## run the container with default parameters
 	docker run --net=host -v $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))/config/:/config stella
 
 up: build run ## build the container and boot
-	
+
+image:
+	docker tag stella docker.pkg.github.com/adityaxdiwakar/stella:${TRAVIS_TAG}
+
+push-image:
+	docker push docker.pkg.github.com/adityaxdiwakar/stella:${TRAVIS_TAG}
