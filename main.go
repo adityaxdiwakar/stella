@@ -37,7 +37,7 @@ var conf tomlConfig
 var stellaHttpClient = &http.Client{Timeout: 10 * time.Second}
 
 func init() {
-	if _, err := toml.DecodeFile("config.toml", &conf); err != nil {
+	if _, err := toml.DecodeFile("/config/config.toml", &conf); err != nil {
 		log.Fatalf("error: could not parse configuration: %v\n", err)
 	}
 

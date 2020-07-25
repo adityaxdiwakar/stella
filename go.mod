@@ -14,4 +14,3 @@ require (
 	golang.org/x/text v0.3.3
 )
 
-replace github.com/adityaxdiwakar/tda-go => /home/aditya/go/src/github.com/adityaxdiwakar/tda-go
