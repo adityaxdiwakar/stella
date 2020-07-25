@@ -8,3 +8,11 @@ before_install:
 
 script:
   - docker images stella 
+
+deploy:
+  provider: script
+  script:
+    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin docker.pkg.github.com
+    docker push USER/REPO
+  on:
+    tags: true
