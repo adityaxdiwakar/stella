@@ -4,6 +4,7 @@ Stella | Discord Bot
 [![Travis (.org)](https://img.shields.io/travis/adityaxdiwakar/stella?style=flat-square)](https://travis-ci.com/github/adityaxdiwakar/stella)
 ![Go Version](https://img.shields.io/github/go-mod/go-version/adityaxdiwakar/stella?style=flat-square)
 ![Code Size](https://img.shields.io/github/languages/code-size/adityaxdiwakar/stella?style=flat-square)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fadityaxdiwakar%2Fstella.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fadityaxdiwakar%2Fstella?ref=badge_shield)
 
 Stella is a Discord Bot intended to provide access to financial data through open and closed source tools provided by third-parties and Aditya Diwakar as well. This bot is intended to be used in the ``Wall St. Community`` server but has been introduced in numerous servers since then. This bot is written in Golang and is currently on-going a full migration from the previous Python version.
 
@@ -28,3 +29,7 @@ Support for this bot is provided, please open a GitHub issue or contact me throu
 
 We're currently closed to taking any requests, if you make a PR, it'll most likely be denied due to our policies.
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fadityaxdiwakar%2Fstella.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fadityaxdiwakar%2Fstella?ref=badge_large)
