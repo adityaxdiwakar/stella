@@ -18,7 +18,7 @@ run: ## run the container with default parameters
 up: build run ## build the container and boot
 
 image:
-	docker tag stella docker.pkg.github.com/adityaxdiwakar/stella:${TRAVIS_TAG}
+	docker tag stella docker.pkg.github.com/adityaxdiwakar/stella/${TRAVIS_TAG}
 
 push-image:
-	docker push docker.pkg.github.com/adityaxdiwakar/stella:${TRAVIS_TAG}
+	docker push docker.pkg.github.com/adityaxdiwakar/stella/${TRAVIS_TAG}
