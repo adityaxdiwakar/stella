@@ -9,7 +9,7 @@ before_install:
 script:
   - docker images stella 
 
-after_success:
+deploy:
   provider: script
   script: package.sh
   on:
