@@ -14,6 +14,6 @@ after_success:
 
 deploy:
   provider: script
-  script: echo "$DOCKER_PASSWORD" | docker login docker.pkg.github.com -u $DOCKER_USERNAME --password-stdin && make push-image  
+  script: docker login docker.pkg.github.com -u $DOCKER_USERNAME -p $DOCKER_PASSWORD && make push-image  
   on:
     tags: true
