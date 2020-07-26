@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -55,12 +56,17 @@ func createEmbed(t reflect.Type, v reflect.Value) []*discordgo.MessageEmbedField
 			tagValue = strings.Split(tagValue, " ")[0]
 		}
 
+		if tagValue == "" {
+			continue
+		}
+
 		embedFields = append(embedFields, &discordgo.MessageEmbedField{
 			Name:   tagName,
 			Value:  tagValue,
 			Inline: true,
 		})
 	}
+
 	return embedFields
 }
 
@@ -147,7 +153,8 @@ func sendDividends(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []st
 		Fields: createEmbed(reflect.TypeOf(ShortListDiviends{}), reflect.ValueOf(*shortList)),
 	}
 
-	s.ChannelMessageSendEmbed(m.ChannelID, embed)
+	_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+	log.Println(err)
 }
 
 func sendCompanyName(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string) {

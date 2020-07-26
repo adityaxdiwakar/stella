@@ -252,7 +252,7 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 					printer.Sprintf("Messages Seen: **%d**", messagesSeen),
 					printer.Sprintf("Charts Served: **%d**", chartsServed),
 					printer.Sprintf("Uptime: **%s**", uptime()),
-					printer.Sprintf("Version: **v0.81**"),
+					printer.Sprintf("Version: **v0.82**"),
 					printer.Sprintf("Heartbeat Latency: **%dms**", s.HeartbeatLatency().Milliseconds()),
 				),
 			},
