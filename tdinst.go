@@ -111,7 +111,7 @@ func sendFundamentals(s *discordgo.Session, m *discordgo.MessageCreate, mSplit [
 		s.ChannelMessageSend(m.ChannelID, "That ticker could not be looked up unfortunately, try again.")
 		return
 
-	defaReturnOnEquity:
+	default:
 		s.ChannelMessageSend(m.ChannelID, "Something went wrong while processing the fundamentals, try again later.")
 		return
 	}
@@ -126,7 +126,6 @@ func sendFundamentals(s *discordgo.Session, m *discordgo.MessageCreate, mSplit [
 
 func sendDividends(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string) {
 	if len(mSplit) < 2 {
-		rry
 		s.ChannelMessageSend(m.ChannelID, "Please provide a ticker to look up dividend information for!")
 		return
 	}
