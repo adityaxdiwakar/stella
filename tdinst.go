@@ -55,12 +55,17 @@ func createEmbed(t reflect.Type, v reflect.Value) []*discordgo.MessageEmbedField
 			tagValue = strings.Split(tagValue, " ")[0]
 		}
 
+		if tagValue == "" {
+			continue
+		}
+
 		embedFields = append(embedFields, &discordgo.MessageEmbedField{
 			Name:   tagName,
 			Value:  tagValue,
 			Inline: true,
 		})
 	}
+
 	return embedFields
 }
 
