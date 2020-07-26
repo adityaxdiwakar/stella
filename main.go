@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/adityaxdiwakar/flux"
 	tda "github.com/adityaxdiwakar/tda-go"
 	"github.com/bwmarrin/discordgo"
 	"github.com/go-redis/redis/v8"
@@ -31,13 +32,14 @@ var rdb *redis.Client
 var db *sql.DB
 var printer *message.Printer
 var tds tda.Session
+var fluxS *flux.Session
 var tickerChannels []string
 var conf tomlConfig
 
 var stellaHttpClient = &http.Client{Timeout: 10 * time.Second}
 
 func init() {
-	if _, err := toml.DecodeFile("/config/config.toml", &conf); err != nil {
+	if _, err := toml.DecodeFile("config/config.toml", &conf); err != nil {
 		log.Fatalf("error: could not parse configuration: %v\n", err)
 	}
 
@@ -83,6 +85,13 @@ func init() {
 		RootUrl:     "https://api.tdameritrade.com/v1",
 	}
 	tds.InitSession()
+
+	fluxS, err = flux.New(tds)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fluxS.Open()
 }
 
 func uptime() string {
@@ -194,6 +203,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	case mSplit[0] == "showtags":
 		showTags(s, m)
+
+	case mSplit[0] == "search":
+		searchTicker(s, m, mSplit)
 
 	}
 }
