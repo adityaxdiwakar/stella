@@ -207,6 +207,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case mSplit[0] == "search":
 		searchTicker(s, m, mSplit)
 
+	case mSplit[0] == "help":
+		help(s, m, mSplit)
+
 	}
 }
 
