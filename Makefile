@@ -24,6 +24,3 @@ image:
 push-image:
 	docker push docker.pkg.github.com/adityaxdiwakar/stella/stella:${TRAVIS_TAG}
 	docker push docker.pkg.github.com/adityaxdiwakar/stella/stella:latest
-
-deploy-image:
-	sh deploy.sh
