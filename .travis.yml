@@ -15,3 +15,5 @@ deploy:
   script: sh deploy.sh
   on:
     tags: true
+addons:
+  ssh_known_hosts: vps.adi.wtf
