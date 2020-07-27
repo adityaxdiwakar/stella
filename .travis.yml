@@ -11,6 +11,7 @@ after_success:
 - make image
 deploy:
   provider: script
+  skip_cleanup: true
   script: deploy.sh
   on:
     tags: true
