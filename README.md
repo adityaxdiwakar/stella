@@ -2,7 +2,6 @@ Stella | Discord Bot
 ----
 [![Go Report Card](https://goreportcard.com/badge/github.com/adityaxdiwakar/stella?style=flat-square)](https://goreportcard.com/report/github.com/adityaxdiwakar/stella)
 [![Travis (.org)](https://img.shields.io/travis/adityaxdiwakar/stella?style=flat-square)](https://travis-ci.com/github/adityaxdiwakar/stella)
-![Go Version](https://img.shields.io/github/go-mod/go-version/adityaxdiwakar/stella?style=flat-square)
 ![Code Size](https://img.shields.io/github/languages/code-size/adityaxdiwakar/stella?style=flat-square)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fadityaxdiwakar%2Fstella.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fadityaxdiwakar%2Fstella?ref=badge_shield)
 

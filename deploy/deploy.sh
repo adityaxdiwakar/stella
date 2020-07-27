@@ -1,3 +1,4 @@
+make image
 docker login docker.pkg.github.com -u $DOCKER_USERNAME -p $DOCKER_PASSWORD 
 make push-image
 

@@ -7,8 +7,6 @@ before_install:
 - docker build -t stella .
 script:
 - docker images stella
-after_success:
-- make image
 deploy:
   provider: script
   skip_cleanup: true
