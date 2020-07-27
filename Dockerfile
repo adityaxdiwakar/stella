@@ -1,6 +1,6 @@
 From golang:1.14.6-buster as builder
 
-WORKDIR /go/src/stella
+WORKDIR /go/src/stella/src
 COPY . /go/src/stella
 
 RUN go get -d -v
