@@ -9,7 +9,7 @@ import (
 
 func help(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string) {
 	helpMessages := map[string]string{
-		"menu": fmt.Sprintf("The following menus are available, use them by" +
+		"menu": fmt.Sprintf("The following menus are available, use them by " +
 			"doing `?help <menu>`\n```charts  | help for equity charts\nfutures | " +
 			"help for futures charts\nforex   | help for forex charts\ncompany | help" +
 			"for ?div, ?earnings, and ?fun\nlookup  | help for ?name/?search\ntags    | " +
