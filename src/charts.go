@@ -3,9 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/bwmarrin/discordgo"
@@ -256,20 +258,41 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		}
 	}
 
+	messageStack := []*discordgo.Message{}
 	s.ChannelMessageDelete(msg.ChannelID, msg.ID)
 	if len(tickerErrorStack) != len(tickers) {
 		// Delete the interrim message, since it cannot be edited w/ files
-		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+		msg, _ := s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 			Content: fmt.Sprintf("Here is your %s chart", finvizChartTimeframeTranslator(timeframeMessage)),
 			Files:   files,
 		})
+		messageStack = append(messageStack, msg)
 	}
 
 	if len(tickerErrorStack) > 0 {
 		joinedTickerStack := strings.Join(tickerErrorStack, ", ")
 		errorTickersMsg := fmt.Sprintf("**`%d`** tickers could not be loaded: ``%s``", len(tickerErrorStack), joinedTickerStack)
-		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+		msg, _ := s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 			Content: errorTickersMsg,
 		})
+		messageStack = append(messageStack, msg)
+	}
+
+	for _, message := range messageStack {
+		s.MessageReactionAdd(message.ChannelID, message.ID, ":stellax:737458650490077196")
+	}
+
+	time.Sleep(90 * time.Second)
+
+	for _, message := range messageStack {
+		personalUser, err := s.User("@me")
+		if err != nil {
+			continue
+		}
+		personalID := personalUser.ID
+		err = s.MessageReactionRemove(message.ChannelID, message.ID, ":stellax:737458650490077196", personalID)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
