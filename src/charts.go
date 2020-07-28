@@ -14,6 +14,13 @@ import (
 	"github.com/google/go-querystring/query"
 )
 
+type RemovableMessageStruct struct {
+	SentID     string
+	ReceivedID string
+	ChannelID  string
+	AuthorID   string
+}
+
 type FinvizEquityQueryStruct struct {
 	Ticker    string `url:"t"`
 	Type      string `url:"ty"`
@@ -267,6 +274,12 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 			Files:   files,
 		})
 		messageStack = append(messageStack, msg)
+		removableMessages[msg.ID] = RemovableMessageStruct{
+			SentID:     msg.ID,
+			ReceivedID: m.ID,
+			ChannelID:  msg.ChannelID,
+			AuthorID:   m.Author.ID,
+		}
 	}
 
 	if len(tickerErrorStack) > 0 {
@@ -276,6 +289,12 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 			Content: errorTickersMsg,
 		})
 		messageStack = append(messageStack, msg)
+		removableMessages[msg.ID] = RemovableMessageStruct{
+			SentID:     msg.ID,
+			ReceivedID: m.ID,
+			ChannelID:  msg.ChannelID,
+			AuthorID:   m.Author.ID,
+		}
 	}
 
 	for _, message := range messageStack {

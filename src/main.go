@@ -35,6 +35,7 @@ var tds tda.Session
 var fluxS *flux.Session
 var tickerChannels []string
 var conf tomlConfig
+var removableMessages map[string]RemovableMessageStruct
 
 var stellaHttpClient = &http.Client{Timeout: 10 * time.Second}
 
@@ -92,6 +93,8 @@ func init() {
 	}
 
 	fluxS.Open()
+
+	removableMessages = make(map[string]RemovableMessageStruct)
 }
 
 func uptime() string {
@@ -111,6 +114,7 @@ func main() {
 	}
 
 	dg.AddHandler(messageCreate)
+	dg.AddHandler(reactionHandler)
 
 	if *tickerPtr {
 		go channelTicker(dg)
