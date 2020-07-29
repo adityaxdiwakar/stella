@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -123,9 +125,47 @@ func exchangeUrl(ticker, exchange string) string {
 	return fmt.Sprintf("https://www.reuters.com/companies/api/getFetchCompanyProfile/%s%s", ticker, exchange)
 }
 
+var ErrRequestPkgFailed = errors.New("reuters error: package failed to be requested")
+var ErrResponseFailed = errors.New("reuters error: non-200/206 response code")
+
+func getReutersData(ticker, exchange string, iterDepth int) (*ReutersResponse, error) {
+	if iterDepth == 3 {
+		return nil, ErrResponseFailed
+	}
+
+	req, err := http.NewRequest("GET", exchangeUrl(ticker, exchange), nil)
+	if err != nil {
+		return nil, ErrRequestPkgFailed
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4181.8 Safari/537.36")
+	req.Header.Set("Host", "www.reuters.com")
+
+	response := ReutersResponse{}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, ErrResponseFailed
+	} else if resp.StatusCode == 206 {
+		response := ReutersResponse{}
+		json.NewDecoder(resp.Body).Decode(&response)
+
+		if response.MarketData.CompanyName != "" && response.MarketData.About != "" {
+			return &response, nil
+		}
+
+		time.Sleep(250 * time.Millisecond)
+		return getReutersData(ticker, exchange, iterDepth+1)
+	} else if resp.StatusCode != 200 {
+		return nil, ErrResponseFailed
+	}
+
+	json.NewDecoder(resp.Body).Decode(&response)
+
+	return &response, nil
+}
+
 func reutersBio(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string) {
 	if len(mSplit) < 2 {
-		s.ChannelMessageSend(m.ChannelID, "Please provide a ticker to look up dividend information for!")
+		s.ChannelMessageSend(m.ChannelID, "Please provide a ticker to look up!")
 		return
 	}
 
@@ -135,21 +175,13 @@ func reutersBio(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []strin
 
 	response := ReutersResponse{}
 	success := false
+
 	for _, exchange := range []string{".O", ".N", ""} {
-		req, err := http.NewRequest("GET", exchangeUrl(ticker, exchange), nil)
+		resp, err := getReutersData(ticker, exchange, 1)
 		if err != nil {
 			continue
 		}
-		req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4181.8 Safari/537.36")
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil || (resp.StatusCode != 200 && resp.StatusCode != 206) {
-			continue
-		}
-
-		defer resp.Body.Close()
-
-		json.NewDecoder(resp.Body).Decode(&response)
+		response = *resp
 		success = true
 		break
 	}
