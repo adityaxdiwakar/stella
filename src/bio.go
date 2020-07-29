@@ -128,11 +128,7 @@ func exchangeUrl(ticker, exchange string) string {
 var ErrRequestPkgFailed = errors.New("reuters error: package failed to be requested")
 var ErrResponseFailed = errors.New("reuters error: non-200/206 response code")
 
-func getReutersData(ticker, exchange string, iterDepth int) (*ReutersResponse, error) {
-	if iterDepth == 3 {
-		return nil, ErrResponseFailed
-	}
-
+func getReutersData(ticker, exchange string) (*ReutersResponse, error) {
 	req, err := http.NewRequest("GET", exchangeUrl(ticker, exchange), nil)
 	if err != nil {
 		return nil, ErrRequestPkgFailed
@@ -152,8 +148,7 @@ func getReutersData(ticker, exchange string, iterDepth int) (*ReutersResponse, e
 			return &response, nil
 		}
 
-		time.Sleep(250 * time.Millisecond)
-		return getReutersData(ticker, exchange, iterDepth+1)
+		return nil, ErrResponseFailed
 	} else if resp.StatusCode != 200 {
 		return nil, ErrResponseFailed
 	}
@@ -161,6 +156,16 @@ func getReutersData(ticker, exchange string, iterDepth int) (*ReutersResponse, e
 	json.NewDecoder(resp.Body).Decode(&response)
 
 	return &response, nil
+}
+
+func repeatReutersRequest(ticker, exchange string, ch chan ReutersResponse) {
+	for i := 0; i < 3; i++ {
+		r, err := getReutersData(ticker, exchange)
+		if err != nil {
+			continue
+		}
+		ch <- *r
+	}
 }
 
 func reutersBio(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string) {
@@ -173,42 +178,41 @@ func reutersBio(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []strin
 
 	loadingMsg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Loading company bio for `%s`, please wait...", strings.ToUpper(ticker)))
 
-	response := ReutersResponse{}
-	success := false
+	reutersChannel := make(chan ReutersResponse)
 
 	for _, exchange := range []string{".O", ".N", ""} {
-		resp, err := getReutersData(ticker, exchange, 1)
-		if err != nil {
-			continue
-		}
-		response = *resp
-		success = true
-		break
+		go repeatReutersRequest(ticker, exchange, reutersChannel)
 	}
 
-	if !success {
+	select {
+
+	case reutersData := <-reutersChannel:
+		companyName := reutersData.MarketData.CompanyName
+		aboutCompany := reutersData.MarketData.About
+
+		if companyName == "" || aboutCompany == "" {
+			s.ChannelMessageEdit(loadingMsg.ChannelID, loadingMsg.ID, "The company bio could not be found, try again with a different ticker")
+			return
+		}
+
+		embed := &discordgo.MessageEmbed{
+			Title:       companyName,
+			Description: aboutCompany,
+		}
+
+		emptyContent := ""
+		s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+			Content: &emptyContent,
+			Embed:   embed,
+			ID:      loadingMsg.ID,
+			Channel: loadingMsg.ChannelID,
+		})
+
+		return
+
+	case <-time.After(2 * time.Second):
 		s.ChannelMessageEdit(loadingMsg.ChannelID, loadingMsg.ID, "Something went wrong or the ticker does not exist in the database!")
 		return
 	}
 
-	companyName := response.MarketData.CompanyName
-	aboutCompany := response.MarketData.About
-
-	if companyName == "" || aboutCompany == "" {
-		s.ChannelMessageEdit(loadingMsg.ChannelID, loadingMsg.ID, "The company bio could not be found, try again with a different ticker")
-		return
-	}
-
-	embed := &discordgo.MessageEmbed{
-		Title:       companyName,
-		Description: aboutCompany,
-	}
-
-	emptyContent := ""
-	s.ChannelMessageEditComplex(&discordgo.MessageEdit{
-		Content: &emptyContent,
-		Embed:   embed,
-		ID:      loadingMsg.ID,
-		Channel: loadingMsg.ChannelID,
-	})
 }
