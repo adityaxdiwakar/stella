@@ -162,7 +162,7 @@ func repeatReutersRequest(ticker, exchange string, ch chan ReutersResponse) {
 	for i := 0; i < 3; i++ {
 		r, err := getReutersData(ticker, exchange)
 		if err != nil {
-			time.Sleep(250 * time.Millisecond)
+			time.Sleep(3000 * time.Millisecond)
 			continue
 		}
 		ch <- *r
@@ -211,7 +211,7 @@ func reutersBio(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []strin
 
 		return
 
-	case <-time.After(2 * time.Second):
+	case <-time.After(10 * time.Second):
 		s.ChannelMessageEdit(loadingMsg.ChannelID, loadingMsg.ID, "Something went wrong or the ticker does not exist in the database!")
 		return
 	}
