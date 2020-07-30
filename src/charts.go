@@ -179,6 +179,63 @@ func finvizChartTimeframeTranslator(timeframe string) string {
 	return translationMap[timeframe]
 }
 
+type channelChartObject struct {
+	Ticker string
+	File   *discordgo.File
+	Error  error
+}
+
+func finvizDownloadToChannel(chartUrl, ticker string, ch chan channelChartObject) {
+	file, err := finvizChartUrlDownloader(chartUrl, ticker)
+	ch <- channelChartObject{
+		Ticker: ticker,
+		File:   &file,
+		Error:  err,
+	}
+}
+
+type channelURLObject struct {
+	Ticker           string
+	TimeframeMessage string
+	ChartUrl         string
+	Error            error
+}
+
+func finvizUrlToChannel(ticker string, marketType int, intChartType int8, ch chan channelURLObject) {
+
+	var chartUrl string
+	var timeframeMessage string
+	var err error
+
+	switch marketType {
+
+	case 1:
+		chartUrl, timeframeMessage, err = finvizFuturesChartHandler(ticker, intChartType)
+
+	case 2:
+		chartUrl, timeframeMessage, err = finvizForexChartHandler(ticker, intChartType)
+
+	default:
+		chartUrl, timeframeMessage, err = finvizEquityChartHandler(ticker, intChartType)
+
+	}
+
+	ch <- channelURLObject{
+		Ticker:           ticker,
+		TimeframeMessage: timeframeMessage,
+		ChartUrl:         chartUrl,
+		Error:            err,
+	}
+}
+
+func boolToInt(a bool) int {
+	r := 0
+	if a {
+		r = 1
+	}
+	return r
+}
+
 func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string, isFutures bool, isForex bool) {
 	if len(mSplit[0]) > 1 {
 		if _, err := strconv.Atoi(string(mSplit[0][1])); err != nil {
@@ -229,10 +286,10 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 	var timeframeMessage string
 	var files []*discordgo.File
 	var tickerErrorStack []string
+	var urlStack []string
+	urlChannel := make(chan channelURLObject, len(tickers))
+	tickerChannel := make(chan channelChartObject, len(tickers))
 	for _, ticker := range tickers {
-		var chartUrl string
-		var err error
-
 		// override tickers (a/b shares and russell-2k, see #5)
 		if ticker == "rty" {
 			ticker = "er2"
@@ -240,28 +297,36 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 
 		ticker = strings.ReplaceAll(ticker, ".", "-")
 
-		switch {
+		marketType := boolToInt(isFutures) + 2*boolToInt(isForex)
 
-		case isFutures:
-			chartUrl, timeframeMessage, err = finvizFuturesChartHandler(ticker, intChartType)
+		go finvizUrlToChannel(ticker, marketType, intChartType, urlChannel)
+	}
 
-		case isForex:
-			chartUrl, timeframeMessage, err = finvizForexChartHandler(ticker, intChartType)
-
-		default:
-			chartUrl, timeframeMessage, err = finvizEquityChartHandler(ticker, intChartType)
-
+	for {
+		if len(tickerErrorStack)+len(urlStack) == len(tickers) {
+			break
 		}
 
-		if err != nil {
-			tickerErrorStack = append(tickerErrorStack, ticker)
+		chanURL := <-urlChannel
+		if chanURL.Error != nil {
+			tickerErrorStack = append(tickerErrorStack, chanURL.Ticker)
 		} else {
-			file, err := finvizChartUrlDownloader(chartUrl, ticker)
-			if err != nil {
-				tickerErrorStack = append(tickerErrorStack, ticker)
-			} else {
-				files = append(files, &file)
-			}
+			timeframeMessage = chanURL.TimeframeMessage
+			urlStack = append(urlStack, chanURL.ChartUrl)
+			go finvizDownloadToChannel(chanURL.ChartUrl, chanURL.Ticker, tickerChannel)
+		}
+	}
+
+	for {
+		if len(tickerErrorStack)+len(files) == len(tickers) {
+			break
+		}
+
+		chanChart := <-tickerChannel
+		if chanChart.Error != nil {
+			tickerErrorStack = append(tickerErrorStack, chanChart.Ticker)
+		} else {
+			files = append(files, chanChart.File)
 		}
 	}
 
@@ -314,4 +379,5 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 			log.Println(err)
 		}
 	}
+
 }
