@@ -162,6 +162,7 @@ func repeatReutersRequest(ticker, exchange string, ch chan ReutersResponse) {
 	for i := 0; i < 3; i++ {
 		r, err := getReutersData(ticker, exchange)
 		if err != nil {
+			time.Sleep(250 * time.Millisecond)
 			continue
 		}
 		ch <- *r
