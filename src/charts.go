@@ -280,6 +280,14 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "Multiple charts are limited to 10 per command unfortunately, please try again with fewer than 10 tickers")
 	}
 
+	for i, t := range tickers {
+		if t == "rty" {
+			tickers[i] = "er2"
+		}
+
+		tickers[i] = strings.ReplaceAll(tickers[i], ".", "-")
+	}
+
 	chartsServed += len(tickers)
 	rdb.IncrBy(ctx, "stats.charts.served", int64(len(tickers)))
 
@@ -291,11 +299,6 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 	tickerChannel := make(chan channelChartObject, len(tickers))
 	for _, ticker := range tickers {
 		// override tickers (a/b shares and russell-2k, see #5)
-		if ticker == "rty" {
-			ticker = "er2"
-		}
-
-		ticker = strings.ReplaceAll(ticker, ".", "-")
 
 		marketType := boolToInt(isFutures) + 2*boolToInt(isForex)
 
@@ -317,8 +320,10 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		}
 	}
 
+	fileMap := make(map[string]*discordgo.File)
+
 	for {
-		if len(tickerErrorStack)+len(files) == len(tickers) {
+		if len(tickerErrorStack)+len(fileMap) == len(tickers) {
 			break
 		}
 
@@ -326,8 +331,21 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		if chanChart.Error != nil {
 			tickerErrorStack = append(tickerErrorStack, chanChart.Ticker)
 		} else {
-			files = append(files, chanChart.File)
+			fileMap[chanChart.Ticker] = chanChart.File
 		}
+	}
+
+	for _, erroredTicker := range tickerErrorStack {
+		for index, t := range tickers {
+			if t == erroredTicker {
+				tickers = append(tickers[:index], tickers[index+1:]...)
+				break
+			}
+		}
+	}
+
+	for _, t := range tickers {
+		files = append(files, fileMap[t])
 	}
 
 	messageStack := []*discordgo.Message{}
