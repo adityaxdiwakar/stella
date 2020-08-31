@@ -30,11 +30,15 @@ type FinvizEquityQueryStruct struct {
 }
 
 func finvizCheckContentLength(chartUrl string) error {
-	res, err := http.Head(chartUrl)
+	req, _ := http.NewRequest("HEAD", chartUrl, nil)
+	req.Header.Add("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4181.8 Safari/537.36")
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return errors.New("Error getting HEAD of chart image")
 	}
 
+	defer res.Body.Close()
 	if res.ContentLength < 7500 {
 		return errors.New("Chart is too small, most likely empty")
 	}
@@ -150,7 +154,10 @@ func finvizForexChartHandler(ticker string, timeframe int8) (string, string, err
 }
 
 func finvizChartUrlDownloader(Url string, ticker string) (discordgo.File, error) {
-	resp, err := http.Get(Url)
+	req, _ := http.NewRequest("GET", Url, nil)
+	req.Header.Add("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4181.8 Safari/537.36")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return discordgo.File{}, errors.New("Could not download file, for some reason")
 	}
