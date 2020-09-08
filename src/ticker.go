@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -90,6 +91,11 @@ func getFuturesData() (*float64, *string, *string, error) {
 	payload := httpPayload.Payload
 
 	price := payload.Trade.Price
+
+	if price == 0 {
+		return nil, nil, nil, errors.New("Received zero quote, ignoring...")
+	}
+
 	numericalChange := price - payload.SessionPrices.Settlement
 	numericalPercentage := numericalChange / payload.SessionPrices.Settlement * 100
 	var change string
