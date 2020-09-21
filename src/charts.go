@@ -70,9 +70,9 @@ func finvizEquityChartHandler(ticker string, timeframe int8) (string, string, er
 		Size:      "l",
 	}
 
-	rootUrl := "https://charts.aditya.diwakar.io/elite/chart.ashx"
+	rootUrl := "https://elite.finviz.com/chart.ashx"
 	if timeframe > 5 {
-		rootUrl = "https://charts.aditya.diwakar.io/chart.ashx"
+		rootUrl = "https://finviz.com/chart.ashx"
 	}
 
 	if timeframe == 5 {
@@ -111,7 +111,7 @@ func finvizFuturesChartHandler(ticker string, timeframe int8) (string, string, e
 		Size:   "l",
 	}
 
-	rootUrl := "https://charts.aditya.diwakar.io/fut_chart.ashx"
+	rootUrl := "https://finviz.com/fut_chart.ashx"
 
 	qStr, _ := query.Values(queryParams)
 	chartUrl := fmt.Sprintf("%s?%s", rootUrl, qStr.Encode())
@@ -144,7 +144,7 @@ func finvizForexChartHandler(ticker string, timeframe int8) (string, string, err
 		return "", "", errors.New("Forex ticker provided is not in list, cannot continue")
 	}
 
-	chartUrl := fmt.Sprintf("https://charts.aditya.diwakar.io/fx_image.ashx?%s_%s_l.png", ticker, timeframes[timeframe])
+	chartUrl := fmt.Sprintf("https://finviz.com/fx_image.ashx?%s_%s_l.png", ticker, timeframes[timeframe])
 
 	if finvizCheckContentLength(chartUrl) != nil {
 		return "", "", errors.New("Content length check failed, cannot continue")
@@ -357,7 +357,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 
 	messageStack := []*discordgo.Message{}
 	s.ChannelMessageDelete(msg.ChannelID, msg.ID)
-	if len(tickerErrorStack) != len(tickers) {
+	if len(tickers) != 0 {
 		// Delete the interrim message, since it cannot be edited w/ files
 		msg, _ := s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 			Content: fmt.Sprintf("Here is your %s chart", finvizChartTimeframeTranslator(timeframeMessage)),
