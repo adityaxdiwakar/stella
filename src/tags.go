@@ -9,6 +9,7 @@ import (
 	//"github.com/bwmarrin/discordgo"
 )
 
+
 func retrieveTagFromDb(tagName string) (string, error) {
 	sqlStatement := `SELECT content FROM tags WHERE id=$1`
 	var content string
@@ -85,6 +86,20 @@ func listTagsFromDb() ([]string, error) {
 }
 
 func addTag(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string) {
+
+	users := map[string]bool {
+		"119247462996115456": true,
+		"192696739981950976": true,
+		"606549882681032879": true,
+		"297949378830794752": true,
+		"460357462604775425": true,
+	}
+
+	if _, ok := users[m.Author.ID]; !ok {
+		s.ChannelMessageSend(m.ChannelID, ":lock: You are not authorized for this!")
+		return
+	}
+
 	if len(mSplit) < 3 {
 		s.ChannelMessageSend(m.ChannelID, "Please provide a tag name and tag content for the tag to be added")
 		return
@@ -126,6 +141,20 @@ func retrieveTag(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 }
 
 func deleteTag(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string) {
+
+	users := map[string]bool {
+		"119247462996115456": true,
+		"192696739981950976": true,
+		"606549882681032879": true,
+		"297949378830794752": true,
+		"460357462604775425": true,
+	}
+
+	if _, ok := users[m.Author.ID]; !ok {
+		s.ChannelMessageSend(m.ChannelID, ":lock: You are not authorized for this!")
+		return
+	}
+
 	if len(mSplit) < 2 {
 		s.ChannelMessageSend(m.ChannelID, "Please provide a tag name to be deleted from the tag database")
 		return
