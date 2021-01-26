@@ -39,7 +39,7 @@ func finvizCheckContentLength(chartUrl string) error {
 	}
 
 	defer res.Body.Close()
-	if res.ContentLength < 7500 {
+	if res.ContentLength < 6000 {
 		return errors.New("Chart is too small, most likely empty")
 	}
 
@@ -105,16 +105,8 @@ func finvizFuturesChartHandler(ticker string, timeframe int8) (string, string, e
 	// Timeframes for translating to Finviz-Query language
 	timeframes := []string{"m5", "h1", "d1", "w1", "m1"}
 
-	queryParams := FinvizEquityQueryStruct{
-		Ticker: ticker,
-		Period: timeframes[timeframe],
-		Size:   "l",
-	}
-
-	rootUrl := "https://finviz.com/fut_chart.ashx"
-
-	qStr, _ := query.Values(queryParams)
-	chartUrl := fmt.Sprintf("%s?%s", rootUrl, qStr.Encode())
+	rootUrl := "https://finviz.com/fut_image.ashx"
+	chartUrl := fmt.Sprintf("%s?%s_%s_s.png", rootUrl, strings.ToLower(ticker), timeframes[timeframe])
 
 	if finvizCheckContentLength(chartUrl) != nil {
 		return "", "", errors.New("Content Length check failed")
