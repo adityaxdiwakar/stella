@@ -13,5 +13,3 @@ require (
 	github.com/lib/pq v1.7.0
 	golang.org/x/text v0.3.3
 )
-
-replace github.com/adityaxdiwakar/flux => /home/aditya/go/src/github.com/adityaxdiwakar/flux
