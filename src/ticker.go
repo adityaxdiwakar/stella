@@ -1,24 +1,29 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/adityaxdiwakar/flux"
 	"github.com/bwmarrin/discordgo"
 )
 
 func channelTicker(s *discordgo.Session) {
-	for range time.Tick(300 * time.Second) {
+	for range time.Tick(307 * time.Second) {
 		price, change, percentage, err := getFuturesData()
 		if err != nil {
 			log.Println("[ticker] Could not retrieve futures data for profile status")
+			fmt.Println(err)
 			continue
 		}
-		message := fmt.Sprintf("%.2f (%s, %s%%)", *price, *change, *percentage)
-		for _, channelID := range []string{"703080609358020608", "709860290694742098"} {
+		message := fmt.Sprintf("%.2f (%s, %s)", *price, *change, *percentage)
+
+		// set for every relevant server
+		for _, channelID := range []string{
+			"703080609358020608",
+			"709860290694742098",
+		} {
 			_, err := s.ChannelEdit(channelID, message)
 			if err != nil {
 				log.Printf("[ticker] Could not change channel title for %s due to: %v\n", channelID, err)
@@ -28,13 +33,13 @@ func channelTicker(s *discordgo.Session) {
 }
 
 func playingTicker(s *discordgo.Session) {
-	for range time.Tick(15 * time.Second) {
+	for range time.Tick(13 * time.Second) {
 		price, _, percentage, err := getFuturesData()
 		if err != nil {
 			log.Println("[ticker] Could not retrieve futures data for profile status")
 			continue
 		}
-		message := fmt.Sprintf("%.2f (%s%%)", *price, *percentage)
+		message := fmt.Sprintf("%.2f (%s)", *price, *percentage)
 		s.UpdateStatusComplex(discordgo.UpdateStatusData{
 			Game: &discordgo.Game{
 				Name: message,
@@ -44,73 +49,32 @@ func playingTicker(s *discordgo.Session) {
 	}
 }
 
-type FuturesPayload struct {
-	Code    int `json:"code"`
-	Payload struct {
-		Timestamp     int64 `json:"timestamp"`
-		ContractID    int   `json:"contract_id"`
-		SessionVolume int   `json:"session_volume"`
-		OpenInterest  int   `json:"open_interest"`
-		SessionPrices struct {
-			Open       float64 `json:"open"`
-			High       float64 `json:"high"`
-			Settlement float64 `json:"settlement"`
-			Low        float64 `json:"low"`
-		} `json:"session_prices"`
-		Depth struct {
-			Bid struct {
-				Price float64 `json:"price"`
-				Size  int     `json:"size"`
-			} `json:"bid"`
-			Ask struct {
-				Price float64 `json:"price"`
-				Size  int     `json:"size"`
-			} `json:"ask"`
-		} `json:"depth"`
-		Trade struct {
-			Price float64 `json:"price"`
-			Size  int     `json:"size"`
-		} `json:"trade"`
-	} `json:"payload"`
-}
-
 func getFuturesData() (*float64, *string, *string, error) {
-	res, err := stellaHttpClient.Get("https://md.aditya.diwakar.io/recent/")
+	sig := flux.QuoteRequestSignature{
+		Ticker:      "/ES",
+		RefreshRate: 300,
+		Fields: []flux.QuoteField{
+			flux.Mark,
+			flux.MarkChange,
+			flux.MarkPercentChange,
+		},
+	}
+
+	payload, err := fluxS.RequestQuote(sig)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	defer res.Body.Close()
+	price := payload.Items[0].Values.MARK
+	change := payload.Items[0].Values.MARKCHANGE
+	percent := payload.Items[0].Values.MARKPERCENTCHANGE * 100
 
-	httpPayload := FuturesPayload{}
-	err = json.NewDecoder(res.Body).Decode(&httpPayload)
-	if err != nil {
-		return nil, nil, nil, err
+	var sChange string
+	var sPercent string
+	if change > 0 {
+		sChange = fmt.Sprintf("+%.2f", change)
+		sPercent = fmt.Sprintf("+%.2f%%", percent)
 	}
 
-	payload := httpPayload.Payload
-
-	price := payload.Trade.Price
-
-	if price == 0 {
-		return nil, nil, nil, errors.New("Received zero quote, ignoring...")
-	}
-
-	numericalChange := price - payload.SessionPrices.Settlement
-	numericalPercentage := numericalChange / payload.SessionPrices.Settlement * 100
-	var change string
-	if numericalChange >= 0 {
-		change = fmt.Sprintf("+%.2f", numericalChange)
-	} else {
-		change = fmt.Sprintf("%.2f", numericalChange)
-	}
-
-	var percentage string
-	if numericalPercentage >= 0 {
-		percentage = fmt.Sprintf("+%.2f", numericalPercentage)
-	} else {
-		percentage = fmt.Sprintf("%.2f", numericalPercentage)
-	}
-
-	return &price, &change, &percentage, nil
+	return &price, &sChange, &sPercent, nil
 }

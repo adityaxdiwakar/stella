@@ -80,7 +80,6 @@ func init() {
 	printer = message.NewPrinter(message.MatchLanguage(conf.Language))
 
 	// intitialize tda lib
-	fmt.Println(conf.TDAmeritrade.RefreshToken)
 	tds = tda.Session{
 		Refresh:     conf.TDAmeritrade.RefreshToken,
 		ConsumerKey: conf.TDAmeritrade.ConsumerKey,
@@ -263,7 +262,7 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 					printer.Sprintf("Messages Seen: **%d**", messagesSeen),
 					printer.Sprintf("Charts Served: **%d**", chartsServed),
 					printer.Sprintf("Uptime: **%s**", uptime()),
-					printer.Sprintf("Version: **v0.99**"),
+					printer.Sprintf("Version: **v0.101**"),
 					printer.Sprintf("Heartbeat Latency: **%dms**", s.HeartbeatLatency().Milliseconds()),
 				),
 			},
