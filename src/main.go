@@ -217,6 +217,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case mSplit[0] == "bio":
 		reutersBio(s, m, mSplit)
 
+	case mSplit[0] == "quote":
+		quoteTicker(s, m, mSplit, 0)
+
 	}
 }
 
@@ -262,7 +265,7 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 					printer.Sprintf("Messages Seen: **%d**", messagesSeen),
 					printer.Sprintf("Charts Served: **%d**", chartsServed),
 					printer.Sprintf("Uptime: **%s**", uptime()),
-					printer.Sprintf("Version: **v0.101**"),
+					printer.Sprintf("Version: **v0.102**"),
 					printer.Sprintf("Heartbeat Latency: **%dms**", s.HeartbeatLatency().Milliseconds()),
 				),
 			},

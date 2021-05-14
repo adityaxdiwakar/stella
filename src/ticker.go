@@ -74,6 +74,9 @@ func getFuturesData() (*float64, *string, *string, error) {
 	if change > 0 {
 		sChange = fmt.Sprintf("+%.2f", change)
 		sPercent = fmt.Sprintf("+%.2f%%", percent)
+	} else {
+		sChange = fmt.Sprintf("%.2f", change)
+		sPercent = fmt.Sprintf("%.2f%%", percent)
 	}
 
 	return &price, &sChange, &sPercent, nil
