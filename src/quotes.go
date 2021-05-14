@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/adityaxdiwakar/flux"
@@ -73,7 +72,5 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 		payload.BID, payload.BIDSIZE,
 		payload.ASK, payload.ASKSIZE,
 		payload.VOLUME)
-	response, _ := json.Marshal(searchResponse)
 	s.ChannelMessageSend(m.ChannelID, string(responseText))
-	fmt.Println(string(response))
 }
