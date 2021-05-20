@@ -2,6 +2,7 @@ package main
 
 type tomlConfig struct {
 	Language      string
+	FluxLogging   bool `toml:"flux_logging"`
 	DiscordConfig discordCredentials
 	Redis         redisCredentials
 	Database      postgresCredentials

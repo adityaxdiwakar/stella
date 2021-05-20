@@ -87,7 +87,7 @@ func init() {
 	}
 	tds.InitSession()
 
-	fluxS, err = flux.New(tds)
+	fluxS, err = flux.New(tds, conf.FluxLogging)
 	if err != nil {
 		log.Fatal(err)
 	}
