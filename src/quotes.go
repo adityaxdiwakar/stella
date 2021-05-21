@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/adityaxdiwakar/flux"
 	"github.com/bwmarrin/discordgo"
@@ -10,6 +11,7 @@ import (
 func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string, count int) {
 	if len(mSplit) < 2 {
 		s.ChannelMessageSend(m.ChannelID, "Please provide a ticker to search")
+		return
 	}
 
 	// I like mark, bid, bid size, ask, ask size, too,
@@ -34,7 +36,11 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 		},
 	})
 
-	if err != nil {
+	fmt.Println(mSplit[1], err)
+	if err == nil {
+		fmt.Println(len(searchResponse.Items))
+	}
+	if err != nil || len(searchResponse.Items) == 0 {
 		s.ChannelMessageSend(m.ChannelID, "Something went wrong while processing the request!")
 		return
 	}
@@ -45,6 +51,7 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 			s.ChannelMessageSend(m.ChannelID, "Something went wrong while processing the request!")
 			return
 		} else {
+			time.Sleep(50 * time.Millisecond)
 			quoteTicker(s, m, mSplit, count+1)
 			return
 		}

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"flag"
 	"fmt"
 	"log"
 	"math/rand"
@@ -104,9 +103,6 @@ func uptime() string {
 func main() {
 	defer db.Close()
 
-	tickerPtr := flag.Bool("ticker", true, "ticker boolean")
-	flag.Parse()
-
 	dg, err := discordgo.New(fmt.Sprintf("Bot %s", conf.DiscordConfig.Token))
 	if err != nil {
 		fmt.Println("Error creating Discord Session due to:", err)
@@ -116,7 +112,7 @@ func main() {
 	dg.AddHandler(messageCreate)
 	dg.AddHandler(reactionHandler)
 
-	if *tickerPtr {
+	if conf.Ticker {
 		go channelTicker(dg)
 		go playingTicker(dg)
 	} else {
