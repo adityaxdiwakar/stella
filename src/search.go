@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/adityaxdiwakar/flux"
@@ -28,12 +30,9 @@ func searchTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []str
 
 	validResponses := 0
 	response := fmt.Sprintf("Relevant responses to your query `%s`:", query)
-	for _, instrument := range searchResponse.Value.Instruments {
+	for _, instrument := range searchResponse.Instruments {
+		json.NewEncoder(os.Stdout).Encode(instrument)
 		if strings.HasPrefix(instrument.Symbol, "0") {
-			continue
-		}
-
-		if instrument.SourceType != "NYSE" && instrument.SourceType != "NASDAQ" {
 			continue
 		}
 

@@ -21,6 +21,10 @@ github.com/adityaxdiwakar/flux v0.0.0-20210513230030-4c8953ec8f03 h1:+wiPpK6RnVO
 github.com/adityaxdiwakar/flux v0.0.0-20210513230030-4c8953ec8f03/go.mod h1:/sKO7Wzw04gl7+ZFa7KzCl0IAnOXh5zOULcGAApgoEE=
 github.com/adityaxdiwakar/flux v0.0.0-20210520194253-36e89e967f13 h1:P7LJYzFR8cIO5LHhu0c8E0c/wfST0oeBvndKinUtaU0=
 github.com/adityaxdiwakar/flux v0.0.0-20210520194253-36e89e967f13/go.mod h1:/sKO7Wzw04gl7+ZFa7KzCl0IAnOXh5zOULcGAApgoEE=
+github.com/adityaxdiwakar/flux v0.0.0-20210603200002-b17066c2e3d4 h1:P5gC5GFS61RFfzzN5HfbuS3gzh2geS7kFBjdETxPqXM=
+github.com/adityaxdiwakar/flux v0.0.0-20210603200002-b17066c2e3d4/go.mod h1:/sKO7Wzw04gl7+ZFa7KzCl0IAnOXh5zOULcGAApgoEE=
+github.com/adityaxdiwakar/flux v0.0.0-20210603205056-54f787ed64a8 h1:1zPS0k2gyZEDafbtBzQqpw3XGEB4X4hIH1v1kCvJr24=
+github.com/adityaxdiwakar/flux v0.0.0-20210603205056-54f787ed64a8/go.mod h1:/sKO7Wzw04gl7+ZFa7KzCl0IAnOXh5zOULcGAApgoEE=
 github.com/adityaxdiwakar/tda-go v0.0.0-20200720003608-6e71f979b4cb h1:m0FbaT6/O3g+4caspdb5CqfVjZGj2g4S64RoBabS/6I=
 github.com/adityaxdiwakar/tda-go v0.0.0-20200720003608-6e71f979b4cb/go.mod h1:IdlyE0Lvz7UZH1xnnKEw332ZZ8zvO5lGLXnbBKzJQi4=
 github.com/benbjohnson/clock v1.0.3 h1:vkLuvpK4fmtSCuo60+yC63p7y0BmQ8gm5ZXGuBCJyXg=
