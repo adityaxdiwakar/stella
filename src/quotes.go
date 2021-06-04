@@ -1,10 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"image"
+	"image/png"
+	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/adityaxdiwakar/flux"
 	"github.com/bwmarrin/discordgo"
@@ -14,6 +19,7 @@ import (
 )
 
 func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string, count int) {
+	start := time.Now()
 	if len(mSplit) < 2 {
 		s.ChannelMessageSend(m.ChannelID, "Please provide a ticker to search")
 		return
@@ -57,7 +63,38 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 		}
 	}(tickers, quoteChannel)
 
+	photoFile, err := os.Open(fmt.Sprintf("Quote %dx.png", len(tickers)))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	i, _, err := image.Decode(photoFile)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	img := i.(*image.NRGBA)
+
+	ttf, err := ioutil.ReadFile("OpenSans-Regular.ttf")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	font, err := truetype.Parse(ttf)
+
+	c := freetype.NewContext()
+	size := 24.0
+
+	c.SetDPI(72)
+	c.SetFont(font)
+	c.SetClip(img.Bounds())
+	c.SetFontSize(size)
+	c.SetDst(img)
 	quoteResponses := []*flux.QuoteStoredCache{}
+	heights := []int{69, 121, 173, 225, 277}
 	for {
 		if len(erroredTickers)+len(quoteResponses) == len(tickers) {
 			break
@@ -65,91 +102,26 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 
 		quoteResponse := <-quoteChannel
 		quoteResponses = append(quoteResponses, quoteResponse)
+		addRow(quoteResponse, heights[len(quoteResponses)-1], c, font)
 	}
 	json.NewEncoder(os.Stdout).Encode(quoteResponses)
 
-	/*
-		photoFile, err := os.Open("Quote 1x.png")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+	buff := new(bytes.Buffer)
+	png.Encode(buff, img)
 
-		i, _, err := image.Decode(photoFile)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+	file := discordgo.File{
+		Name:   "file.png",
+		Reader: bytes.NewReader(buff.Bytes()),
+	}
 
-		img := i.(*image.NRGBA)
+	s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+		Files: []*discordgo.File{&file},
+	})
 
-		ttf, err := ioutil.ReadFile("OpenSans-Regular.ttf")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		font, err := truetype.Parse(ttf)
-
-		start := time.Now()
-		c := freetype.NewContext()
-		size := 24.0
-
-		greenColor := color.RGBA{66, 169, 43, 255}
-		redColor := color.RGBA{255, 51, 51, 255}
-
-		var primaryColor image.Image
-		if payload.MARKCHANGE > 0 {
-			primaryColor = image.NewUniform(greenColor)
-		} else if payload.MARKCHANGE < 0 {
-			primaryColor = image.NewUniform(redColor)
-		} else {
-			primaryColor = image.White
-		}
-
-		c.SetDPI(72)
-		c.SetFont(font)
-		c.SetClip(img.Bounds())
-		c.SetSrc(image.White)
-		c.SetFontSize(size)
-		c.SetDst(img)
-
-		// add ticker
-		addLabel(tickerStr, c, font, 65, 75, image.White, 24.0, 140)
-
-		// add mark
-		addLabel(markStr, c, font, 65, 220, primaryColor, 24.0, 500)
-
-		// mark change
-		addLabel(markChStr, c, font, 65, 394, primaryColor, 24.0, 500)
-
-		// bid string
-		bidStr := printer.Sprintf("%.2f", payload.BID)
-		addLabel(bidStr, c, font, 65, 568, primaryColor, 24.0, 500)
-
-		// ask string
-		addLabel(askStr, c, font, 65, 698, primaryColor, 24.0, 500)
-
-		// volume
-		addLabel(volumeStr, c, font, 65, 875, image.White, 24.0, 500)
-
-		buff := new(bytes.Buffer)
-		png.Encode(buff, img)
-
-		file := discordgo.File{
-			Name:   "file.png",
-			Reader: bytes.NewReader(buff.Bytes()),
-		}
-
-		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Files: []*discordgo.File{&file},
-		})
-
-		fmt.Println(time.Now().Sub(start))
-	*/
+	fmt.Println(time.Now().Sub(start))
 }
 
-func addRow(quote *flux.QuoteStoredCache, height int, primaryColor image.Image, c *freetype.Context, font *truetype.Font) {
+func addRow(quote *flux.QuoteStoredCache, height int, c *freetype.Context, font *truetype.Font) {
 	payload := quote.Items[0].Values
 	fields := []string{
 		quote.Items[0].Symbol,
@@ -160,12 +132,22 @@ func addRow(quote *flux.QuoteStoredCache, height int, primaryColor image.Image, 
 		printer.Sprintf("%d", payload.VOLUME),
 	}
 	offsets := []int{75, 220, 394, 568, 698, 875}
-	colors := []image.Image{image.White, primaryColor, primaryColor, primaryColor, image.White}
+	primaryColor := getColor(payload.MARKCHANGE)
+	colors := []image.Image{image.White, primaryColor, primaryColor, primaryColor, primaryColor, image.White}
 	widths := []int{140, 500, 500, 500, 500, 500}
 
 	for i, fieldStr := range fields {
-		addLabel(fieldStr, c, font, 65, offsets[i], colors[i], 24.0, widths[i])
+		addLabel(fieldStr, c, font, height, offsets[i], colors[i], 24.0, widths[i])
 	}
+}
+
+func getColor(data float64) image.Image {
+	if data > 0 {
+		return tdaGreen
+	} else if data < 0 {
+		return tdaRed
+	}
+	return image.White
 }
 
 func addLabel(str string, c *freetype.Context, font *truetype.Font, height int, offset int, color image.Image, size float64, space int) {
