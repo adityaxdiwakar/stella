@@ -115,15 +115,12 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 		c.SetDst(img)
 
 		// add ticker
-		tickerStr := searchResponse.Items[0].Symbol
 		addLabel(tickerStr, c, font, 65, 75, image.White, 24.0, 140)
 
 		// add mark
-		markStr := printer.Sprintf("%.2f", payload.MARK)
 		addLabel(markStr, c, font, 65, 220, primaryColor, 24.0, 500)
 
 		// mark change
-		markChStr := printer.Sprintf("%.2f (%.2f%%)", payload.MARKCHANGE, payload.MARKPERCENTCHANGE*100)
 		addLabel(markChStr, c, font, 65, 394, primaryColor, 24.0, 500)
 
 		// bid string
@@ -131,11 +128,9 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 		addLabel(bidStr, c, font, 65, 568, primaryColor, 24.0, 500)
 
 		// ask string
-		askStr := printer.Sprintf("%.2f", payload.ASK)
 		addLabel(askStr, c, font, 65, 698, primaryColor, 24.0, 500)
 
 		// volume
-		volumeStr := printer.Sprintf("%d", payload.VOLUME)
 		addLabel(volumeStr, c, font, 65, 875, image.White, 24.0, 500)
 
 		buff := new(bytes.Buffer)
@@ -152,6 +147,25 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 
 		fmt.Println(time.Now().Sub(start))
 	*/
+}
+
+func addRow(quote *flux.QuoteStoredCache, height int, primaryColor image.Image, c *freetype.Context, font *truetype.Font) {
+	payload := quote.Items[0].Values
+	fields := []string{
+		quote.Items[0].Symbol,
+		printer.Sprintf("%.2f", payload.MARK),
+		printer.Sprintf("%.2f (%.2f%%)", payload.MARKCHANGE, payload.MARKPERCENTCHANGE*100),
+		printer.Sprintf("%.2f", payload.BID),
+		printer.Sprintf("%.2f", payload.ASK),
+		printer.Sprintf("%d", payload.VOLUME),
+	}
+	offsets := []int{75, 220, 394, 568, 698, 875}
+	colors := []image.Image{image.White, primaryColor, primaryColor, primaryColor, image.White}
+	widths := []int{140, 500, 500, 500, 500, 500}
+
+	for i, fieldStr := range fields {
+		addLabel(fieldStr, c, font, 65, offsets[i], colors[i], 24.0, widths[i])
+	}
 }
 
 func addLabel(str string, c *freetype.Context, font *truetype.Font, height int, offset int, color image.Image, size float64, space int) {
