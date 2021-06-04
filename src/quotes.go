@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/adityaxdiwakar/flux"
 	"github.com/bwmarrin/discordgo"
@@ -18,7 +17,6 @@ import (
 )
 
 func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string, count int) {
-	start := time.Now()
 	if len(mSplit) < 2 {
 		s.ChannelMessageSend(m.ChannelID, "Please provide a ticker to search")
 		return
@@ -102,7 +100,6 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 		}
 
 		notification := <-notifChannel
-		fmt.Println(notification)
 		if notification {
 			quoteResponse := <-quoteChannel
 			quoteResponses = append(quoteResponses, quoteResponse)
@@ -110,7 +107,6 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 		}
 	}
 
-	fmt.Println(erroredTickers)
 	for i, ticker := range erroredTickers {
 		addLabel(ticker, c, font, heights[len(quoteResponses)+i], 75, image.White, 24.0, 140)
 		addLabel("Could not load data for this ticker, try again?", c, font, heights[len(quoteResponses)+i],
@@ -129,7 +125,6 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 		Files: []*discordgo.File{&file},
 	})
 
-	fmt.Println(time.Now().Sub(start))
 }
 
 func addRow(quote *flux.QuoteStoredCache, height int, c *freetype.Context, font *truetype.Font) {
