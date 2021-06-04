@@ -1,14 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
+	"encoding/json"
 	"image"
-	"image/color"
-	"image/png"
-	"io/ioutil"
 	"os"
-	"time"
+	"strings"
 
 	"github.com/adityaxdiwakar/flux"
 	"github.com/bwmarrin/discordgo"
@@ -23,127 +19,139 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 		return
 	}
 
-	// I like mark, bid, bid size, ask, ask size, too,
-	// last, last change, percent
-
-	searchResponse, err := fluxS.RequestQuote(flux.QuoteRequestSignature{
-		Ticker:      mSplit[1],
-		RefreshRate: 300,
-		Fields: []flux.QuoteField{
-			flux.Bid,
-			flux.BidSize,
-			flux.Ask,
-			flux.AskSize,
-			flux.Volume,
-			flux.Last,
-			flux.LastSize,
-			flux.NetChange,
-			flux.NetPercentChange,
-			flux.Mark,
-			flux.MarkChange,
-			flux.MarkPercentChange,
-		},
-	})
-
-	if err != nil || len(searchResponse.Items) == 0 {
-		s.ChannelMessageSend(m.ChannelID, "Something went wrong while processing the request!")
+	erroredTickers := []string{}
+	tickers := mSplit[1:]
+	if len(tickers) > 5 {
+		s.ChannelMessageSend(m.ChannelID, "Please only put up to 5 symbols to quote")
 		return
 	}
 
-	payload := searchResponse.Items[0].Values
-	if payload.LAST == 0 {
-		if count == 2 {
-			s.ChannelMessageSend(m.ChannelID, "Something went wrong while processing the request!")
-			return
-		} else {
-			time.Sleep(50 * time.Millisecond)
-			quoteTicker(s, m, mSplit, count+1)
+	quoteChannel := make(chan *flux.QuoteStoredCache, 5)
+
+	go func(tickers []string, quoteChan chan *flux.QuoteStoredCache) {
+		for _, ticker := range tickers {
+			searchResponse, err := fluxS.RequestQuote(flux.QuoteRequestSignature{
+				Ticker:      ticker,
+				RefreshRate: 300,
+				Fields: []flux.QuoteField{
+					flux.Bid,
+					flux.BidSize,
+					flux.Ask,
+					flux.AskSize,
+					flux.Volume,
+					flux.Last,
+					flux.LastSize,
+					flux.NetChange,
+					flux.NetPercentChange,
+					flux.Mark,
+					flux.MarkChange,
+					flux.MarkPercentChange,
+				},
+			})
+			if err != nil || len(searchResponse.Items) == 0 {
+				erroredTickers = append(erroredTickers, strings.ToUpper(ticker))
+				continue
+			}
+
+			quoteChan <- searchResponse
+		}
+	}(tickers, quoteChannel)
+
+	quoteResponses := []*flux.QuoteStoredCache{}
+	for {
+		if len(erroredTickers)+len(quoteResponses) == len(tickers) {
+			break
+		}
+
+		quoteResponse := <-quoteChannel
+		quoteResponses = append(quoteResponses, quoteResponse)
+	}
+	json.NewEncoder(os.Stdout).Encode(quoteResponses)
+
+	/*
+		photoFile, err := os.Open("Quote 1x.png")
+		if err != nil {
+			fmt.Println(err)
 			return
 		}
-	}
 
-	photoFile, err := os.Open("Quote 1x.png")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+		i, _, err := image.Decode(photoFile)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-	i, _, err := image.Decode(photoFile)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+		img := i.(*image.NRGBA)
 
-	img := i.(*image.NRGBA)
+		ttf, err := ioutil.ReadFile("OpenSans-Regular.ttf")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-	ttf, err := ioutil.ReadFile("OpenSans-Regular.ttf")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+		font, err := truetype.Parse(ttf)
 
-	font, err := truetype.Parse(ttf)
+		start := time.Now()
+		c := freetype.NewContext()
+		size := 24.0
 
-	start := time.Now()
-	c := freetype.NewContext()
-	size := 24.0
+		greenColor := color.RGBA{66, 169, 43, 255}
+		redColor := color.RGBA{255, 51, 51, 255}
 
-	greenColor := color.RGBA{66, 169, 43, 255}
-	redColor := color.RGBA{255, 51, 51, 255}
+		var primaryColor image.Image
+		if payload.MARKCHANGE > 0 {
+			primaryColor = image.NewUniform(greenColor)
+		} else if payload.MARKCHANGE < 0 {
+			primaryColor = image.NewUniform(redColor)
+		} else {
+			primaryColor = image.White
+		}
 
-	var primaryColor image.Image
-	if payload.MARKCHANGE > 0 {
-		primaryColor = image.NewUniform(greenColor)
-	} else if payload.MARKCHANGE < 0 {
-		primaryColor = image.NewUniform(redColor)
-	} else {
-		primaryColor = image.White
-	}
+		c.SetDPI(72)
+		c.SetFont(font)
+		c.SetClip(img.Bounds())
+		c.SetSrc(image.White)
+		c.SetFontSize(size)
+		c.SetDst(img)
 
-	c.SetDPI(72)
-	c.SetFont(font)
-	c.SetClip(img.Bounds())
-	c.SetSrc(image.White)
-	c.SetFontSize(size)
-	c.SetDst(img)
+		// add ticker
+		tickerStr := searchResponse.Items[0].Symbol
+		addLabel(tickerStr, c, font, 65, 75, image.White, 24.0, 140)
 
-	// add ticker
-	tickerStr := searchResponse.Items[0].Symbol
-	addLabel(tickerStr, c, font, 65, 75, image.White, 24.0, 140)
+		// add mark
+		markStr := printer.Sprintf("%.2f", payload.MARK)
+		addLabel(markStr, c, font, 65, 220, primaryColor, 24.0, 500)
 
-	// add mark
-	markStr := printer.Sprintf("%.2f", payload.MARK)
-	addLabel(markStr, c, font, 65, 220, primaryColor, 24.0, 500)
+		// mark change
+		markChStr := printer.Sprintf("%.2f (%.2f%%)", payload.MARKCHANGE, payload.MARKPERCENTCHANGE*100)
+		addLabel(markChStr, c, font, 65, 394, primaryColor, 24.0, 500)
 
-	// mark change
-	markChStr := printer.Sprintf("%.2f (%.2f%%)", payload.MARKCHANGE, payload.MARKPERCENTCHANGE*100)
-	addLabel(markChStr, c, font, 65, 394, primaryColor, 24.0, 500)
+		// bid string
+		bidStr := printer.Sprintf("%.2f", payload.BID)
+		addLabel(bidStr, c, font, 65, 568, primaryColor, 24.0, 500)
 
-	// bid string
-	bidStr := printer.Sprintf("%.2f", payload.BID)
-	addLabel(bidStr, c, font, 65, 568, primaryColor, 24.0, 500)
+		// ask string
+		askStr := printer.Sprintf("%.2f", payload.ASK)
+		addLabel(askStr, c, font, 65, 698, primaryColor, 24.0, 500)
 
-	// ask string
-	askStr := printer.Sprintf("%.2f", payload.ASK)
-	addLabel(askStr, c, font, 65, 698, primaryColor, 24.0, 500)
+		// volume
+		volumeStr := printer.Sprintf("%d", payload.VOLUME)
+		addLabel(volumeStr, c, font, 65, 875, image.White, 24.0, 500)
 
-	// volume
-	volumeStr := printer.Sprintf("%d", payload.VOLUME)
-	addLabel(volumeStr, c, font, 65, 875, image.White, 24.0, 500)
+		buff := new(bytes.Buffer)
+		png.Encode(buff, img)
 
-	buff := new(bytes.Buffer)
-	png.Encode(buff, img)
+		file := discordgo.File{
+			Name:   "file.png",
+			Reader: bytes.NewReader(buff.Bytes()),
+		}
 
-	file := discordgo.File{
-		Name:   "file.png",
-		Reader: bytes.NewReader(buff.Bytes()),
-	}
+		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+			Files: []*discordgo.File{&file},
+		})
 
-	s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-		Files: []*discordgo.File{&file},
-	})
-
-	fmt.Println(time.Now().Sub(start))
+		fmt.Println(time.Now().Sub(start))
+	*/
 }
 
 func addLabel(str string, c *freetype.Context, font *truetype.Font, height int, offset int, color image.Image, size float64, space int) {
