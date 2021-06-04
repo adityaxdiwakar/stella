@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"image"
 	"image/png"
@@ -27,14 +26,15 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 
 	erroredTickers := []string{}
 	tickers := mSplit[1:]
-	if len(tickers) > 5 {
-		s.ChannelMessageSend(m.ChannelID, "Please only put up to 5 symbols to quote")
+	if len(tickers) > 10 {
+		s.ChannelMessageSend(m.ChannelID, "Please only put up to 10 symbols to quote")
 		return
 	}
 
 	quoteChannel := make(chan *flux.QuoteStoredCache, 5)
+	notifChannel := make(chan bool, 5)
 
-	go func(tickers []string, quoteChan chan *flux.QuoteStoredCache) {
+	go func(tickers []string, quoteChan chan *flux.QuoteStoredCache, notifChannel chan bool) {
 		for _, ticker := range tickers {
 			searchResponse, err := fluxS.RequestQuote(flux.QuoteRequestSignature{
 				Ticker:      ticker,
@@ -56,12 +56,12 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 			})
 			if err != nil || len(searchResponse.Items) == 0 {
 				erroredTickers = append(erroredTickers, strings.ToUpper(ticker))
-				continue
+			} else {
+				quoteChan <- searchResponse
 			}
-
-			quoteChan <- searchResponse
+			notifChannel <- (err == nil)
 		}
-	}(tickers, quoteChannel)
+	}(tickers, quoteChannel, notifChannel)
 
 	photoFile, err := os.Open(fmt.Sprintf("Quote %dx.png", len(tickers)))
 	if err != nil {
@@ -94,17 +94,28 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 	c.SetFontSize(size)
 	c.SetDst(img)
 	quoteResponses := []*flux.QuoteStoredCache{}
-	heights := []int{69, 121, 173, 225, 277}
+	heights := []int{69, 121, 173, 225, 277, 329, 381, 433, 485, 537}
+
 	for {
 		if len(erroredTickers)+len(quoteResponses) == len(tickers) {
 			break
 		}
 
-		quoteResponse := <-quoteChannel
-		quoteResponses = append(quoteResponses, quoteResponse)
-		addRow(quoteResponse, heights[len(quoteResponses)-1], c, font)
+		notification := <-notifChannel
+		fmt.Println(notification)
+		if notification {
+			quoteResponse := <-quoteChannel
+			quoteResponses = append(quoteResponses, quoteResponse)
+			addRow(quoteResponse, heights[len(quoteResponses)-1], c, font)
+		}
 	}
-	json.NewEncoder(os.Stdout).Encode(quoteResponses)
+
+	fmt.Println(erroredTickers)
+	for i, ticker := range erroredTickers {
+		addLabel(ticker, c, font, heights[len(quoteResponses)+i], 75, image.White, 24.0, 140)
+		addLabel("Could not load data for this ticker, try again?", c, font, heights[len(quoteResponses)+i],
+			549, image.White, 24.0, 500)
+	}
 
 	buff := new(bytes.Buffer)
 	png.Encode(buff, img)
