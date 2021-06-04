@@ -61,7 +61,7 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 		}
 	}(tickers, quoteChannel, notifChannel)
 
-	photoFile, err := os.Open(fmt.Sprintf("Quote %dx.png", len(tickers)))
+	photoFile, err := os.Open(fmt.Sprintf("assets/images/quotes/Quote %dx.png", len(tickers)))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -75,7 +75,7 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 
 	img := i.(*image.NRGBA)
 
-	ttf, err := ioutil.ReadFile("OpenSans-Regular.ttf")
+	ttf, err := ioutil.ReadFile("assets/fonts/OpenSans-Regular.ttf")
 	if err != nil {
 		fmt.Println(err)
 		return
