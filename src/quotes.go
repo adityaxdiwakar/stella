@@ -9,6 +9,11 @@ import (
 )
 
 func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string, count int) {
+	if !fluxS.Established {
+		s.ChannelMessageSend(m.ChannelID, "Sorry, Stella is not connected to TDAmeritrade at this time")
+		return
+	}
+
 	if len(mSplit) < 2 {
 		s.ChannelMessageSend(m.ChannelID, "Please provide a ticker to search")
 		return
