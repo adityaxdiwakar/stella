@@ -95,7 +95,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	fluxS.Open()
+	go fluxS.Open()
 
 	removableMessages = make(map[string]RemovableMessageStruct)
 
