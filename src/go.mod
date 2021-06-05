@@ -8,6 +8,8 @@ require (
 	github.com/adityaxdiwakar/tda-go v0.0.0-20200720003608-6e71f979b4cb
 	github.com/bwmarrin/discordgo v0.21.1
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
+	github.com/go-chi/chi v1.5.4 // indirect
+	github.com/go-chi/chi/v5 v5.0.3 // indirect
 	github.com/go-redis/redis/v8 v8.0.0-beta.6
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/google/go-querystring v1.1.0
