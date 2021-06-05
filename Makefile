@@ -1,3 +1,4 @@
+dir = $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 .PHONY: help
 
 help: ## help command for available tasks
@@ -13,7 +14,7 @@ build-nc: ## build the container w/o a cache
 	docker build --no-cache -t stella .
 
 run: ## run the container with default parameters
-	docker run --net=host -v $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))/src/config/:/config stella
+	docker run --net=host -v $(dir)/src/config/:/config -v $(dir)/src/assets/:/assets stella
 
 up: build run ## build the container and boot
 

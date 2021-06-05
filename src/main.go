@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"image"
+	"image/color"
 	"log"
 	"math/rand"
 	"net/http"
@@ -35,6 +37,8 @@ var fluxS *flux.Session
 var tickerChannels []string
 var conf tomlConfig
 var removableMessages map[string]RemovableMessageStruct
+var tdaGreen image.Image
+var tdaRed image.Image
 
 var stellaHttpClient = &http.Client{Timeout: 10 * time.Second}
 
@@ -94,6 +98,10 @@ func init() {
 	go fluxS.Open()
 
 	removableMessages = make(map[string]RemovableMessageStruct)
+
+	// initialize colors
+	tdaGreen = image.NewUniform(color.RGBA{66, 169, 43, 255})
+	tdaRed = image.NewUniform(color.RGBA{255, 51, 51, 255})
 }
 
 func uptime() string {

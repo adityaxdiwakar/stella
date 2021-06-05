@@ -1,11 +1,19 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"time"
+	"image"
+	"image/png"
+	"io/ioutil"
+	"os"
+	"strings"
 
 	"github.com/adityaxdiwakar/flux"
 	"github.com/bwmarrin/discordgo"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/math/fixed"
 )
 
 func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string, count int) {
@@ -19,70 +27,163 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 		return
 	}
 
-	// I like mark, bid, bid size, ask, ask size, too,
-	// last, last change, percent
-
-	searchResponse, err := fluxS.RequestQuote(flux.QuoteRequestSignature{
-		Ticker:      mSplit[1],
-		RefreshRate: 300,
-		Fields: []flux.QuoteField{
-			flux.Bid,
-			flux.BidSize,
-			flux.Ask,
-			flux.AskSize,
-			flux.Volume,
-			flux.Last,
-			flux.LastSize,
-			flux.NetChange,
-			flux.NetPercentChange,
-			flux.Mark,
-			flux.MarkChange,
-			flux.MarkPercentChange,
-		},
-	})
-
-	fmt.Println(mSplit[1], err)
-	if err == nil {
-		fmt.Println(len(searchResponse.Items))
-	}
-	if err != nil || len(searchResponse.Items) == 0 {
-		s.ChannelMessageSend(m.ChannelID, "Something went wrong while processing the request!")
+	erroredTickers := []string{}
+	tickers := mSplit[1:]
+	if len(tickers) > 10 {
+		s.ChannelMessageSend(m.ChannelID, "Please only put up to 10 symbols to quote")
 		return
 	}
 
-	payload := searchResponse.Items[0].Values
-	if payload.LAST == 0 {
-		if count == 2 {
-			s.ChannelMessageSend(m.ChannelID, "Something went wrong while processing the request!")
-			return
-		} else {
-			time.Sleep(50 * time.Millisecond)
-			quoteTicker(s, m, mSplit, count+1)
-			return
+	quoteChannel := make(chan *flux.QuoteStoredCache, 5)
+	notifChannel := make(chan bool, 5)
+
+	go func(tickers []string, quoteChan chan *flux.QuoteStoredCache, notifChannel chan bool) {
+		for _, ticker := range tickers {
+			searchResponse, err := fluxS.RequestQuote(flux.QuoteRequestSignature{
+				Ticker:      ticker,
+				RefreshRate: 300,
+				Fields: []flux.QuoteField{
+					flux.Bid,
+					flux.BidSize,
+					flux.Ask,
+					flux.AskSize,
+					flux.Volume,
+					flux.Last,
+					flux.LastSize,
+					flux.NetChange,
+					flux.NetPercentChange,
+					flux.Mark,
+					flux.MarkChange,
+					flux.MarkPercentChange,
+				},
+			})
+			if err != nil || len(searchResponse.Items) == 0 {
+				erroredTickers = append(erroredTickers, strings.ToUpper(ticker))
+			} else {
+				quoteChan <- searchResponse
+			}
+			notifChannel <- (err == nil)
+		}
+	}(tickers, quoteChannel, notifChannel)
+
+	photoFile, err := os.Open(fmt.Sprintf("assets/images/quotes/Quote %dx.png", len(tickers)))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	i, _, err := image.Decode(photoFile)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	img := i.(*image.NRGBA)
+
+	ttf, err := ioutil.ReadFile("assets/fonts/OpenSans-Regular.ttf")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	font, err := truetype.Parse(ttf)
+
+	c := freetype.NewContext()
+	size := 24.0
+
+	c.SetDPI(72)
+	c.SetFont(font)
+	c.SetClip(img.Bounds())
+	c.SetFontSize(size)
+	c.SetDst(img)
+	quoteResponses := []*flux.QuoteStoredCache{}
+	heights := []int{69, 121, 173, 225, 277, 329, 381, 433, 485, 537}
+
+	for {
+		if len(erroredTickers)+len(quoteResponses) == len(tickers) {
+			break
+		}
+
+		notification := <-notifChannel
+		if notification {
+			quoteResponse := <-quoteChannel
+			quoteResponses = append(quoteResponses, quoteResponse)
+			addRow(quoteResponse, heights[len(quoteResponses)-1], c, font)
 		}
 	}
 
-	var sChange string
-	var sPercent string
-	if payload.NETCHANGE > 0 {
-		sChange = fmt.Sprintf("+%.2f", payload.MARKCHANGE)
-		sPercent = fmt.Sprintf("+%.2f%%", payload.MARKPERCENTCHANGE*100)
-	} else {
-		sChange = fmt.Sprintf("%.2f", payload.MARKCHANGE)
-		sPercent = fmt.Sprintf("%.2f%%", payload.MARKPERCENTCHANGE*100)
+	for i, ticker := range erroredTickers {
+		addLabel(ticker, c, font, heights[len(quoteResponses)+i], 75, image.White, 24.0, 140)
+		addLabel("Could not load data for this ticker, try again?", c, font, heights[len(quoteResponses)+i],
+			549, image.White, 24.0, 500)
 	}
 
-	responseText := printer.Sprintf(("__Quote Information for %s__\n" +
-		"%.2f %s (%s)\n\n" +
-		"**Last:** %.2f (x%d)\n" +
-		"**Bid:** %.2f (x%d)\n" +
-		"**Ask:** %.2f (x%d)\n" +
-		"**Volume:** %d"),
-		searchResponse.Items[0].Symbol,
-		payload.MARK, sChange, sPercent,
-		payload.LAST, payload.LASTSIZE,
-		payload.BID, payload.BIDSIZE,
-		payload.ASK, payload.ASKSIZE,
-		payload.VOLUME)
-	s.ChannelMessageSend(m.ChannelID, string(responseText))
+	buff := new(bytes.Buffer)
+	png.Encode(buff, img)
+
+	file := discordgo.File{
+		Name:   "file.png",
+		Reader: bytes.NewReader(buff.Bytes()),
+	}
+
+	s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+		Files: []*discordgo.File{&file},
+	})
+
+}
+
+func addRow(quote *flux.QuoteStoredCache, height int, c *freetype.Context, font *truetype.Font) {
+	payload := quote.Items[0].Values
+	fields := []string{
+		quote.Items[0].Symbol,
+		printer.Sprintf("%.2f", payload.MARK),
+		printer.Sprintf("%.2f (%.2f%%)", payload.MARKCHANGE, payload.MARKPERCENTCHANGE*100),
+		printer.Sprintf("%.2f", payload.BID),
+		printer.Sprintf("%.2f", payload.ASK),
+		printer.Sprintf("%d", payload.VOLUME),
+	}
+	offsets := []int{75, 220, 394, 568, 698, 875}
+	primaryColor := getColor(payload.MARKCHANGE)
+	colors := []image.Image{image.White, primaryColor, primaryColor, primaryColor, primaryColor, image.White}
+	widths := []int{140, 500, 500, 500, 500, 500}
+
+	for i, fieldStr := range fields {
+		addLabel(fieldStr, c, font, height, offsets[i], colors[i], 24.0, widths[i])
+	}
+}
+
+func getColor(data float64) image.Image {
+	if data > 0 {
+		return tdaGreen
+	} else if data < 0 {
+		return tdaRed
+	}
+	return image.White
+}
+
+func addLabel(str string, c *freetype.Context, font *truetype.Font, height int, offset int, color image.Image, size float64, space int) {
+	width, nSize := calculateWidth(str, c, font, size, space)
+	pt := freetype.Pt(offset-(width/2).Round(), height+int(c.PointToFixed(size)>>6))
+	c.SetFontSize(nSize)
+	c.SetSrc(color)
+	c.DrawString(str, pt)
+
+}
+
+func calculateWidth(str string, c *freetype.Context, font *truetype.Font, size float64, space int) (fixed.Int26_6, float64) {
+	face := truetype.NewFace(font, &truetype.Options{
+		Size: size,
+	})
+
+	twidth := c.PointToFixed(0)
+	for _, ch := range str {
+		awidth, _ := face.GlyphAdvance(rune(ch))
+		twidth += awidth
+	}
+
+	if twidth.Floor() > (space - 15) {
+		return calculateWidth(str, c, font, float64(space-15)/float64(twidth.Floor())*float64(size), space)
+	}
+
+	return twidth, size
 }
