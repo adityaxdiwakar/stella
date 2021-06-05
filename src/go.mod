@@ -2,6 +2,8 @@ module github.com/adityaxdiwakar/stella
 
 go 1.16
 
+replace github.com/adityaxdiwakar/flux => /home/aditya/go/src/github.com/adityaxdiwakar/flux
+
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/adityaxdiwakar/flux v0.0.0-20210605024659-a37d3c313a7a

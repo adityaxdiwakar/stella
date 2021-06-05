@@ -27,44 +27,34 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 		return
 	}
 
-	erroredTickers := []string{}
-	tickers := mSplit[1:]
+	tickers, tickerMap := removeDuplicates(mSplit[1:])
 	if len(tickers) > 10 {
 		s.ChannelMessageSend(m.ChannelID, "Please only put up to 10 symbols to quote")
 		return
 	}
 
-	quoteChannel := make(chan *flux.QuoteStoredCache, 5)
-	notifChannel := make(chan bool, 5)
-
-	go func(tickers []string, quoteChan chan *flux.QuoteStoredCache, notifChannel chan bool) {
-		for _, ticker := range tickers {
-			searchResponse, err := fluxS.RequestQuote(flux.QuoteRequestSignature{
-				Ticker:      ticker,
-				RefreshRate: 300,
-				Fields: []flux.QuoteField{
-					flux.Bid,
-					flux.BidSize,
-					flux.Ask,
-					flux.AskSize,
-					flux.Volume,
-					flux.Last,
-					flux.LastSize,
-					flux.NetChange,
-					flux.NetPercentChange,
-					flux.Mark,
-					flux.MarkChange,
-					flux.MarkPercentChange,
-				},
-			})
-			if err != nil || len(searchResponse.Items) == 0 {
-				erroredTickers = append(erroredTickers, strings.ToUpper(ticker))
-			} else {
-				quoteChan <- searchResponse
-			}
-			notifChannel <- (err == nil)
-		}
-	}(tickers, quoteChannel, notifChannel)
+	quoteResponse, err := fluxS.RequestQuote(flux.QuoteRequestSignature{
+		Ticker:      strings.Join(tickers, ","),
+		RefreshRate: 300,
+		Fields: []flux.QuoteField{
+			flux.Bid,
+			flux.BidSize,
+			flux.Ask,
+			flux.AskSize,
+			flux.Volume,
+			flux.Last,
+			flux.LastSize,
+			flux.NetChange,
+			flux.NetPercentChange,
+			flux.Mark,
+			flux.MarkChange,
+			flux.MarkPercentChange,
+		},
+	})
+	if err != nil || len(quoteResponse.Items) == 0 {
+		s.ChannelMessageSend(m.ChannelID, "Could not quote any of the tickers requested")
+		return
+	}
 
 	photoFile, err := os.Open(fmt.Sprintf("assets/images/quotes/Quote %dx.png", len(tickers)))
 	if err != nil {
@@ -96,26 +86,22 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 	c.SetClip(img.Bounds())
 	c.SetFontSize(size)
 	c.SetDst(img)
-	quoteResponses := []*flux.QuoteStoredCache{}
 	heights := []int{69, 121, 173, 225, 277, 329, 381, 433, 485, 537}
 
-	for {
-		if len(erroredTickers)+len(quoteResponses) == len(tickers) {
-			break
-		}
-
-		notification := <-notifChannel
-		if notification {
-			quoteResponse := <-quoteChannel
-			quoteResponses = append(quoteResponses, quoteResponse)
-			addRow(quoteResponse, heights[len(quoteResponses)-1], c, font)
-		}
+	errorCount := 0
+	for i, quote := range quoteResponse.Items {
+		addRow(quote, heights[i], c, font)
+		tickerMap[quote.Symbol] = false
+		errorCount = i
 	}
 
-	for i, ticker := range erroredTickers {
-		addLabel(ticker, c, font, heights[len(quoteResponses)+i], 75, image.White, 24.0, 140)
-		addLabel("Could not load data for this ticker, try again?", c, font, heights[len(quoteResponses)+i],
-			549, image.White, 24.0, 500)
+	for key, val := range tickerMap {
+		if val {
+			addLabel(key, c, font, heights[errorCount+1], 75, image.White, 24.0, 140)
+			addLabel("Could not load data for this ticker, try again?", c, font, heights[errorCount+1],
+				549, image.White, 24.0, 500)
+			errorCount += 1
+		}
 	}
 
 	buff := new(bytes.Buffer)
@@ -132,18 +118,28 @@ func quoteTicker(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 
 }
 
-func addRow(quote *flux.QuoteStoredCache, height int, c *freetype.Context, font *truetype.Font) {
-	payload := quote.Items[0].Values
+func addRow(quote flux.QuoteItem, height int, c *freetype.Context, font *truetype.Font) {
+	payload := quote.Values
+
+	last := payload.MARK
+	change := payload.MARKCHANGE
+	changePercent := payload.MARKPERCENTCHANGE
+	if change == 0 && payload.NETCHANGE != 0 {
+		change = payload.NETCHANGE
+		last = payload.LAST
+		changePercent = payload.NETCHANGEPERCENT
+	}
+
 	fields := []string{
-		quote.Items[0].Symbol,
-		printer.Sprintf("%.2f", payload.MARK),
-		printer.Sprintf("%.2f (%.2f%%)", payload.MARKCHANGE, payload.MARKPERCENTCHANGE*100),
+		quote.Symbol,
+		printer.Sprintf("%.2f", last),
+		printer.Sprintf("%.2f (%.2f%%)", change, changePercent*100),
 		printer.Sprintf("%.2f", payload.BID),
 		printer.Sprintf("%.2f", payload.ASK),
 		printer.Sprintf("%d", payload.VOLUME),
 	}
 	offsets := []int{75, 220, 394, 568, 698, 875}
-	primaryColor := getColor(payload.MARKCHANGE)
+	primaryColor := getColor(change)
 	colors := []image.Image{image.White, primaryColor, primaryColor, primaryColor, primaryColor, image.White}
 	widths := []int{140, 500, 500, 500, 500, 500}
 
@@ -186,4 +182,18 @@ func calculateWidth(str string, c *freetype.Context, font *truetype.Font, size f
 	}
 
 	return twidth, size
+}
+
+func removeDuplicates(dupeSlice []string) ([]string, map[string]bool) {
+	keys := make(map[string]bool)
+	output := []string{}
+	for _, entry := range dupeSlice {
+		if _, value := keys[entry]; !value {
+			entryUpper := strings.ToUpper(entry)
+			keys[entryUpper] = true
+			output = append(output, entryUpper)
+		}
+	}
+
+	return output, keys
 }
