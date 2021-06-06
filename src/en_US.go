@@ -28,7 +28,7 @@ var (
 	}
 
 	// General Messages
-	StellaXReaction    = ":stellax:737458650490077196:"
+	StellaXReaction    = ":stellax:737458650490077196"
 	CantFindCompanyBio = "The company bio could not be found, try again?"
 	ErroredCompanyBio  = "Something went wrong or the ticker does not exist in the database"
 	FetchingChart      = ":clock1: Fetching your chart, stand by..."
