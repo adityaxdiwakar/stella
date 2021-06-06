@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/BurntSushi/toml v0.3.1
-	github.com/adityaxdiwakar/flux v0.0.0-20210605224850-9bc2a2ef65bf
+	github.com/adityaxdiwakar/flux v0.0.0-20210606142422-fd40f4b837a9
 	github.com/adityaxdiwakar/tda-go v0.0.0-20200720003608-6e71f979b4cb
 	github.com/bwmarrin/discordgo v0.21.1
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
