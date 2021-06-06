@@ -35,12 +35,12 @@ func finvizCheckContentLength(chartUrl string) error {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return errors.New("Error getting HEAD of chart image")
+		return errors.New(ErrNoHead)
 	}
 
 	defer res.Body.Close()
 	if res.ContentLength < 6000 {
-		return errors.New("Chart is too small, most likely empty")
+		return errors.New(ErrChartSmall)
 	}
 
 	return nil
@@ -50,7 +50,7 @@ func finvizCheckContentLength(chartUrl string) error {
 func finvizEquityChartHandler(ticker string, timeframe int8) (string, string, error) {
 
 	if len(ticker) > 8 {
-		return "", "", errors.New("Ticker is too long, not moving forward")
+		return "", "", errors.New(ErrTickerOverLength)
 	}
 
 	// Timeframes for translations to Finviz-Query language
@@ -83,7 +83,7 @@ func finvizEquityChartHandler(ticker string, timeframe int8) (string, string, er
 	chartUrl := fmt.Sprintf("%s?%s", rootUrl, qStr.Encode())
 
 	if finvizCheckContentLength(chartUrl) != nil {
-		return "", "", errors.New("Content Length check failed")
+		return "", "", errors.New(ErrContentLengthFailed)
 	}
 
 	return chartUrl, timeframes[timeframe], nil
@@ -99,7 +99,7 @@ func finvizFuturesChartHandler(ticker string, timeframe int8) (string, string, e
 
 	// No futures tickers are longer than 4 characters, therefore this is a hard limit
 	if len(ticker) > 4 {
-		return "", "", errors.New("Ticker is too long, not moving forward")
+		return "", "", errors.New(ErrContentLengthFailed)
 	}
 
 	// Timeframes for translating to Finviz-Query language
@@ -109,7 +109,7 @@ func finvizFuturesChartHandler(ticker string, timeframe int8) (string, string, e
 	chartUrl := fmt.Sprintf("%s?%s_%s_s.png", rootUrl, strings.ToLower(ticker), timeframes[timeframe])
 
 	if finvizCheckContentLength(chartUrl) != nil {
-		return "", "", errors.New("Content Length check failed")
+		return "", "", errors.New(ErrContentLengthFailed)
 	}
 
 	return chartUrl, timeframes[timeframe], nil
@@ -118,7 +118,7 @@ func finvizFuturesChartHandler(ticker string, timeframe int8) (string, string, e
 func finvizForexChartHandler(ticker string, timeframe int8) (string, string, error) {
 	// No forex tickers are longer than 9 characters, hard limit
 	if len(ticker) > 9 {
-		return "", "", errors.New("Ticker is too long, not moving forward")
+		return "", "", errors.New(ErrTickerOverLength)
 	}
 
 	ticker = strings.ToUpper(ticker)
@@ -133,13 +133,13 @@ func finvizForexChartHandler(ticker string, timeframe int8) (string, string, err
 		}
 	}
 	if !isValid {
-		return "", "", errors.New("Forex ticker provided is not in list, cannot continue")
+		return "", "", errors.New(ErrTickerNotForexList)
 	}
 
 	chartUrl := fmt.Sprintf("https://finviz.com/fx_image.ashx?%s_%s_l.png", ticker, timeframes[timeframe])
 
 	if finvizCheckContentLength(chartUrl) != nil {
-		return "", "", errors.New("Content length check failed, cannot continue")
+		return "", "", errors.New(ErrContentLengthFailed)
 	}
 
 	return chartUrl, timeframes[timeframe], nil
@@ -151,7 +151,7 @@ func finvizChartUrlDownloader(Url string, ticker string) (discordgo.File, error)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return discordgo.File{}, errors.New("Could not download file, for some reason")
+		return discordgo.File{}, errors.New(ErrCannotDownloadFile)
 	}
 
 	return discordgo.File{Name: fmt.Sprintf("%s.png", ticker), Reader: resp.Body}, nil
@@ -243,7 +243,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		}
 	}
 
-	msg, err := s.ChannelMessageSend(m.ChannelID, ":clock1: Fetching your chart, stand by.")
+	msg, err := s.ChannelMessageSend(m.ChannelID, FetchingChart)
 	if err != nil {
 		// An error occured that stopped the queue message from being sent, cancel progression
 		return
@@ -262,10 +262,10 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 	}
 
 	if (intChartType > 5 || intChartType < 1) && (isFutures || isForex) {
-		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "You've requested an invalid chart timeframe, choose between 1 and 5.")
+		s.ChannelMessageEdit(msg.ChannelID, msg.ID, ErrInvalidChartTime(1, 5))
 		return
 	} else if (intChartType > 7 || intChartType < 0) && !isFutures {
-		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "You've requested an invalid chart timeframe, choose between 0 and 7.")
+		s.ChannelMessageEdit(msg.ChannelID, msg.ID, ErrInvalidChartTime(0, 7))
 		return
 	}
 
@@ -276,7 +276,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 	tickers := unique(mSplit[1:])
 
 	if len(tickers) > 10 {
-		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "Multiple charts are limited to 10 per command unfortunately, please try again with fewer than 10 tickers")
+		s.ChannelMessageEdit(msg.ChannelID, msg.ID, ErrTooManyCharts)
 	}
 
 	for i, t := range tickers {
@@ -352,7 +352,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 	if len(tickers) != 0 {
 		// Delete the interrim message, since it cannot be edited w/ files
 		msg, _ := s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Content: fmt.Sprintf("Here is your %s chart", finvizChartTimeframeTranslator(timeframeMessage)),
+			Content: ChartWithTimeResponse(finvizChartTimeframeTranslator(timeframeMessage)),
 			Files:   files,
 		})
 		messageStack = append(messageStack, msg)
@@ -366,7 +366,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 
 	if len(tickerErrorStack) > 0 {
 		joinedTickerStack := strings.Join(tickerErrorStack, ", ")
-		errorTickersMsg := fmt.Sprintf("**`%d`** tickers could not be loaded: ``%s``", len(tickerErrorStack), joinedTickerStack)
+		errorTickersMsg := ErrCouldNotLoadTickers(len(tickerErrorStack), joinedTickerStack)
 		msg, _ := s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 			Content: errorTickersMsg,
 		})
@@ -380,7 +380,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 	}
 
 	for _, message := range messageStack {
-		s.MessageReactionAdd(message.ChannelID, message.ID, ":stellax:737458650490077196")
+		s.MessageReactionAdd(message.ChannelID, message.ID, StellaXReaction)
 	}
 
 	time.Sleep(90 * time.Second)
@@ -391,7 +391,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 			continue
 		}
 		personalID := personalUser.ID
-		err = s.MessageReactionRemove(message.ChannelID, message.ID, ":stellax:737458650490077196", personalID)
+		err = s.MessageReactionRemove(message.ChannelID, message.ID, StellaXReaction, personalID)
 		if err != nil {
 			log.Println(err)
 		}
