@@ -136,7 +136,7 @@ func addRow(quote flux.QuoteItem, height int, c *freetype.Context, font *truetyp
 		avoidTrailingPrint(printer.Sprintf("%.2f (%.2f%%)", change, changePercent*100)),
 		avoidTrailingPrint(printer.Sprintf("%.4f", payload.BID)),
 		avoidTrailingPrint(printer.Sprintf("%.4f", payload.ASK)),
-		avoidTrailingPrint(printer.Sprintf("%d", payload.VOLUME)),
+		printer.Sprintf("%d", payload.VOLUME),
 	}
 	offsets := []int{75, 220, 394, 568, 698, 875}
 	primaryColor := getColor(change)
