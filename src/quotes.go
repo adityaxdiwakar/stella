@@ -132,11 +132,11 @@ func addRow(quote flux.QuoteItem, height int, c *freetype.Context, font *truetyp
 
 	fields := []string{
 		quote.Symbol,
-		printer.Sprintf("%.2f", last),
-		printer.Sprintf("%.2f (%.2f%%)", change, changePercent*100),
-		printer.Sprintf("%.2f", payload.BID),
-		printer.Sprintf("%.2f", payload.ASK),
-		printer.Sprintf("%d", payload.VOLUME),
+		avoidTrailingPrint(printer.Sprintf("%.4f", last)),
+		avoidTrailingPrint(printer.Sprintf("%.2f (%.2f%%)", change, changePercent*100)),
+		avoidTrailingPrint(printer.Sprintf("%.4f", payload.BID)),
+		avoidTrailingPrint(printer.Sprintf("%.4f", payload.ASK)),
+		avoidTrailingPrint(printer.Sprintf("%d", payload.VOLUME)),
 	}
 	offsets := []int{75, 220, 394, 568, 698, 875}
 	primaryColor := getColor(change)
@@ -146,6 +146,10 @@ func addRow(quote flux.QuoteItem, height int, c *freetype.Context, font *truetyp
 	for i, fieldStr := range fields {
 		addLabel(fieldStr, c, font, height, offsets[i], colors[i], 24.0, widths[i])
 	}
+}
+
+func avoidTrailingPrint(str string) string {
+	return strings.TrimRight(strings.TrimRight(str, "0"), ".")
 }
 
 func getColor(data float64) image.Image {
