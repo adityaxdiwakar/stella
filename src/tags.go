@@ -9,7 +9,6 @@ import (
 	//"github.com/bwmarrin/discordgo"
 )
 
-
 func retrieveTagFromDb(tagName string) (string, error) {
 	sqlStatement := `SELECT content FROM tags WHERE id=$1`
 	var content string
@@ -87,12 +86,13 @@ func listTagsFromDb() ([]string, error) {
 
 func addTag(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string) {
 
-	users := map[string]bool {
+	users := map[string]bool{
 		"119247462996115456": true,
 		"192696739981950976": true,
 		"606549882681032879": true,
 		"297949378830794752": true,
 		"460357462604775425": true,
+		"86817727259361280":  true,
 	}
 
 	if _, ok := users[m.Author.ID]; !ok {
@@ -142,12 +142,13 @@ func retrieveTag(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []stri
 
 func deleteTag(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string) {
 
-	users := map[string]bool {
+	users := map[string]bool{
 		"119247462996115456": true,
 		"192696739981950976": true,
 		"606549882681032879": true,
 		"297949378830794752": true,
 		"460357462604775425": true,
+		"86817727259361280":  true,
 	}
 
 	if _, ok := users[m.Author.ID]; !ok {
