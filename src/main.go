@@ -25,22 +25,23 @@ import (
 	"golang.org/x/text/message"
 )
 
-var startTime time.Time
-var chartsServed int
-var messagesSeen int64
-var ctx = context.Background()
-var rdb *redis.Client
-var db *sql.DB
-var printer *message.Printer
-var tds tda.Session
-var fluxS *flux.Session
-var tickerChannels []string
-var conf tomlConfig
-var removableMessages map[string]RemovableMessageStruct
-var tdaGreen image.Image
-var tdaRed image.Image
-
-var stellaHttpClient = &http.Client{Timeout: 10 * time.Second}
+var (
+	startTime         time.Time
+	chartsServed      int
+	messagesSeen      int64
+	ctx               = context.Background()
+	rdb               *redis.Client
+	db                *sql.DB
+	printer           *message.Printer
+	tds               tda.Session
+	fluxS             *flux.Session
+	tickerChannels    []string
+	conf              tomlConfig
+	removableMessages map[string]RemovableMessageStruct
+	tdaGreen          image.Image
+	tdaRed            image.Image
+	stellaHttpClient  = &http.Client{Timeout: 10 * time.Second}
+)
 
 func init() {
 	if _, err := toml.DecodeFile("config/config.toml", &conf); err != nil {
