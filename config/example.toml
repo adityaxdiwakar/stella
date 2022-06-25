@@ -32,3 +32,7 @@ consumer_key = ""
 # Channels for ticker feature to edit
 [TickerConfig]
 channels = ["1", "2"]
+
+# Users that are authorized to edit tags go here (use their Discord ID)
+[AuthedTagUsers]
+users = ["TimApple", "BillWindows"]
