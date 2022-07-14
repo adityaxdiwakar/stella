@@ -134,6 +134,8 @@ func main() {
 		return
 	}
 
+	openAPI()
+
 	fmt.Println(`
 
 	  Stella is now loaded.
