@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -125,8 +124,8 @@ func exchangeUrl(ticker, exchange string) string {
 	return fmt.Sprintf("https://www.reuters.com/companies/api/getFetchCompanyProfile/%s%s", ticker, exchange)
 }
 
-var ErrRequestPkgFailed = errors.New("reuters error: package failed to be requested")
-var ErrResponseFailed = errors.New("reuters error: non-200/206 response code")
+var ErrRequestPkgFailed = errors.New(ErrReutersPkgFailed)
+var ErrResponseFailed = errors.New(ErrReutersResponseFailed)
 
 func getReutersData(ticker, exchange string) (*ReutersResponse, error) {
 	req, err := http.NewRequest("GET", exchangeUrl(ticker, exchange), nil)
@@ -171,13 +170,13 @@ func repeatReutersRequest(ticker, exchange string, ch chan ReutersResponse) {
 
 func reutersBio(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []string) {
 	if len(mSplit) < 2 {
-		s.ChannelMessageSend(m.ChannelID, "Please provide a ticker to look up!")
+		s.ChannelMessageSend(m.ChannelID, ErrNoTickerProvided)
 		return
 	}
 
 	ticker := mSplit[1]
 
-	loadingMsg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Loading company bio for `%s`, please wait...", strings.ToUpper(ticker)))
+	loadingMsg, _ := s.ChannelMessageSend(m.ChannelID, LoadingCompanyBio(ticker))
 
 	reutersChannel := make(chan ReutersResponse)
 
@@ -192,7 +191,7 @@ func reutersBio(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []strin
 		aboutCompany := reutersData.MarketData.About
 
 		if companyName == "" || aboutCompany == "" {
-			s.ChannelMessageEdit(loadingMsg.ChannelID, loadingMsg.ID, "The company bio could not be found, try again with a different ticker")
+			s.ChannelMessageEdit(loadingMsg.ChannelID, loadingMsg.ID, CantFindCompanyBio)
 			return
 		}
 
@@ -212,7 +211,7 @@ func reutersBio(s *discordgo.Session, m *discordgo.MessageCreate, mSplit []strin
 		return
 
 	case <-time.After(10 * time.Second):
-		s.ChannelMessageEdit(loadingMsg.ChannelID, loadingMsg.ID, "Something went wrong or the ticker does not exist in the database!")
+		s.ChannelMessageEdit(loadingMsg.ChannelID, loadingMsg.ID, ErroredCompanyBio)
 		return
 	}
 
