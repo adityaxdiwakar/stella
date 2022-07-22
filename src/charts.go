@@ -29,6 +29,14 @@ type FinvizEquityQueryStruct struct {
 	Size      string `url:"s"`
 }
 
+var (
+	equityTimeframes = []string{"i1", "i3", "i5", "i15", "i30", "d", "w", "m"}
+	futureTimeframes = []string{"m5", "h1", "d1", "w1"}
+	forexTimeframes  = []string{"m5", "h1", "d1", "w1", "mo"}
+	forexCurrencies  = []string{"EURUSD", "GBPUSD", "USDJPY", "USDCAD",
+		"USDCHF", "AUDUSD", "NZDUSD", "EURGBP", "GBPJPY", "BTCUSD"}
+)
+
 func finvizCheckContentLength(chartUrl string) error {
 	req, _ := http.NewRequest("GET", chartUrl, nil)
 	req.Header.Add("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4181.8 Safari/537.36")
@@ -53,9 +61,6 @@ func finvizEquityChartHandler(ticker string, timeframe int8) (string, string, er
 		return "", "", errors.New("Ticker is too long, not moving forward")
 	}
 
-	// Timeframes for translations to Finviz-Query language
-	timeframes := []string{"i1", "i3", "i5", "i15", "i30", "d", "w", "m"}
-
 	// Determine chart type and remove TA on charts that are not >= 6
 	binaryTA := int(0)
 	if timeframe < 6 {
@@ -66,7 +71,7 @@ func finvizEquityChartHandler(ticker string, timeframe int8) (string, string, er
 		Ticker:    ticker,
 		Type:      "c",
 		Technials: strconv.Itoa(binaryTA),
-		Period:    timeframes[timeframe],
+		Period:    equityTimeframes[timeframe],
 		Size:      "l",
 	}
 
@@ -86,7 +91,7 @@ func finvizEquityChartHandler(ticker string, timeframe int8) (string, string, er
 		return "", "", errors.New("Content Length check failed")
 	}
 
-	return chartUrl, timeframes[timeframe], nil
+	return chartUrl, equityTimeframes[timeframe], nil
 }
 
 type FinvizFuturesQueryStruct struct {
@@ -102,17 +107,15 @@ func finvizFuturesChartHandler(ticker string, timeframe int8) (string, string, e
 		return "", "", errors.New("Ticker is too long, not moving forward")
 	}
 
-	// Timeframes for translating to Finviz-Query language
-	timeframes := []string{"m5", "h1", "d1", "w1", "m1"}
-
 	rootUrl := "https://finviz.com/fut_image.ashx"
-	chartUrl := fmt.Sprintf("%s?%s_%s_s.png", rootUrl, strings.ToLower(ticker), timeframes[timeframe])
+	chartUrl := fmt.Sprintf("%s?%s_%s_s.png", rootUrl, strings.ToLower(ticker),
+		futureTimeframes[timeframe])
 
 	if finvizCheckContentLength(chartUrl) != nil {
 		return "", "", errors.New("Content Length check failed")
 	}
 
-	return chartUrl, timeframes[timeframe], nil
+	return chartUrl, futureTimeframes[timeframe], nil
 }
 
 func finvizForexChartHandler(ticker string, timeframe int8) (string, string, error) {
@@ -123,11 +126,8 @@ func finvizForexChartHandler(ticker string, timeframe int8) (string, string, err
 
 	ticker = strings.ToUpper(ticker)
 
-	timeframes := []string{"m5", "h1", "d1", "w1", "mo"}
-	currencies := []string{"EURUSD", "GBPUSD", "USDJPY", "USDCAD", "USDCHF", "AUDUSD", "NZDUSD", "EURGBP", "GBPJPY", "BTCUSD"}
-
 	isValid := false
-	for _, currency := range currencies {
+	for _, currency := range forexCurrencies {
 		if currency == ticker {
 			isValid = true
 		}
@@ -136,13 +136,13 @@ func finvizForexChartHandler(ticker string, timeframe int8) (string, string, err
 		return "", "", errors.New("Forex ticker provided is not in list, cannot continue")
 	}
 
-	chartUrl := fmt.Sprintf("https://finviz.com/fx_image.ashx?%s_%s_l.png", ticker, timeframes[timeframe])
+	chartUrl := fmt.Sprintf("https://finviz.com/fx_image.ashx?%s_%s_l.png", ticker, forexTimeframes[timeframe])
 
 	if finvizCheckContentLength(chartUrl) != nil {
 		return "", "", errors.New("Content length check failed, cannot continue")
 	}
 
-	return chartUrl, timeframes[timeframe], nil
+	return chartUrl, forexTimeframes[timeframe], nil
 }
 
 func finvizChartUrlDownloader(Url string, ticker string) (discordgo.File, error) {
