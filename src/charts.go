@@ -261,10 +261,16 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		intChartType = int8(uncastedChartType)
 	}
 
-	if (intChartType > 5 || intChartType < 1) && (isFutures || isForex) {
-		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "You've requested an invalid chart timeframe, choose between 1 and 5.")
+	if (intChartType > 4 || intChartType < 1) && isFutures {
+		// futures
+		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "You've requested an invalid chart timeframe, choose between 1 and 4.")
 		return
-	} else if (intChartType > 7 || intChartType < 0) && !isFutures {
+	} else if (intChartType > 5 || intChartType < 1) && isForex {
+		// forex
+		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "You've requested an invalid chart timeframe, choose between 1 and 4.")
+		return
+	} else if (intChartType > 7 || intChartType < 0) && !(isFutures || isForex) {
+		// equities
 		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "You've requested an invalid chart timeframe, choose between 0 and 7.")
 		return
 	}
