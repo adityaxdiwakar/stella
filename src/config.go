@@ -3,7 +3,8 @@ package main
 type tomlConfig struct {
 	Language       string
 	Ticker         bool
-	FluxLogging    bool `toml:"flux_logging"`
+	FluxLogging    bool   `toml:"flux_logging"`
+	Hostname       string `toml:"host"`
 	DiscordConfig  discordCredentials
 	Redis          redisCredentials
 	Database       postgresCredentials

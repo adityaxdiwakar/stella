@@ -266,11 +266,12 @@ func stellaVersion(s *discordgo.Session, m *discordgo.MessageCreate) {
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name: "Status",
-				Value: fmt.Sprintf("%s\n%s\n%s\n%s\n%s",
+				Value: fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s",
 					printer.Sprintf("Messages Seen: **%d**", messagesSeen),
 					printer.Sprintf("Charts Served: **%d**", chartsServed),
 					printer.Sprintf("Uptime: **%s**", uptime()),
-					printer.Sprintf("Version: **v0.106**"),
+					printer.Sprintf("Version: **v0.107**"),
+					printer.Sprintf("Host: **%sms**", conf.Hostname),
 					printer.Sprintf("Heartbeat Latency: **%dms**", s.HeartbeatLatency().Milliseconds()),
 				),
 			},
