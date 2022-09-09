@@ -26,10 +26,9 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          registry: ghcr.io
           context: .
           push: true
-          tags: adityaxdiwakar/stella:latest
+          tags: adityaxdiwakar/stella/stella:latest
       - name: Execute Deploy Script
         uses: appleboy/ssh-action@master
         with:
