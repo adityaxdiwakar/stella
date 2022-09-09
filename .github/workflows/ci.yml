@@ -25,7 +25,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: stella:latest
+          tags: adityaxdiwakar/stella:latest
       - name: Execute Deploy Script
         uses: appleboy/ssh-action@master
         with:
