@@ -26,6 +26,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
+          registry: ghcr.io
           context: .
           push: true
           tags: adityaxdiwakar/stella:latest
