@@ -28,7 +28,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: adityaxdiwakar/stella/stella:latest
+          tags: ghcr.io/adityaxdiwakar/stella/stella:latest
       - name: Execute Deploy Script
         uses: appleboy/ssh-action@master
         with:
