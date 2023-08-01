@@ -31,9 +31,9 @@ type FinvizEquityQueryStruct struct {
 
 var (
 	equityTimeframes = []string{"i1", "i3", "i5", "i15", "i30", "d", "w", "m"}
-	futureTimeframes = []string{"m5", "h1", "d1", "w1"}
-	forexTimeframes  = []string{"m5", "h1", "d1", "w1", "mo"}
-	forexCurrencies  = []string{"EURUSD", "GBPUSD", "USDJPY", "USDCAD",
+	// futureTimeframes = []string{"m5", "h1", "d1", "w1"} not used anymore
+	forexTimeframes = []string{"m5", "h1", "d1", "w1", "mo"}
+	forexCurrencies = []string{"EURUSD", "GBPUSD", "USDJPY", "USDCAD",
 		"USDCHF", "AUDUSD", "NZDUSD", "EURGBP", "GBPJPY", "BTCUSD"}
 )
 
@@ -107,15 +107,15 @@ func finvizFuturesChartHandler(ticker string, timeframe int8) (string, string, e
 		return "", "", errors.New("Ticker is too long, not moving forward")
 	}
 
-	rootUrl := "https://finviz.com/fut_image.ashx"
-	chartUrl := fmt.Sprintf("%s?%s_%s_s.png", rootUrl, strings.ToLower(ticker),
-		futureTimeframes[timeframe])
+	rootUrl := "https://charts2-node.finviz.com/chart.ashx?cs=m&s=linear&ct=candle_stick&tm=d"
+	chartUrl := fmt.Sprintf("%s&t=@%s&tf=%s", rootUrl, strings.ToUpper(ticker),
+		equityTimeframes[timeframe])
 
 	if finvizCheckContentLength(chartUrl) != nil {
 		return "", "", errors.New("Content Length check failed")
 	}
 
-	return chartUrl, futureTimeframes[timeframe], nil
+	return chartUrl, equityTimeframes[timeframe], nil
 }
 
 func finvizForexChartHandler(ticker string, timeframe int8) (string, string, error) {
@@ -251,8 +251,10 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 
 	intChartType := int8(-1)
 	if len(mSplit[0]) == 1 || unicode.IsLetter(rune(mSplit[0][1])) {
-		if isFutures || isForex {
+		if isForex {
 			intChartType = 1
+		} else if isFutures {
+			intChartType = 2
 		} else {
 			intChartType = 5
 		} // Default values
@@ -261,9 +263,9 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		intChartType = int8(uncastedChartType)
 	}
 
-	if (intChartType > 4 || intChartType < 1) && isFutures {
+	if (intChartType > 7 || intChartType < 0) && isFutures {
 		// futures
-		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "You've requested an invalid chart timeframe, choose between 1 and 4.")
+		s.ChannelMessageEdit(msg.ChannelID, msg.ID, "You've requested an invalid chart timeframe, choose between 0 and 7.")
 		return
 	} else if (intChartType > 5 || intChartType < 1) && isForex {
 		// forex
@@ -275,7 +277,7 @@ func finvizChartSender(s *discordgo.Session, m *discordgo.MessageCreate, mSplit 
 		return
 	}
 
-	if isFutures || isForex {
+	if isForex {
 		intChartType--
 	}
 

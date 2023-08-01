@@ -2,14 +2,13 @@ package main
 
 type tomlConfig struct {
 	Language       string
-	Ticker         bool
 	FluxLogging    bool   `toml:"flux_logging"`
+	EnableTDA      bool   `toml:"enable_tda"`
 	Hostname       string `toml:"host"`
 	DiscordConfig  discordCredentials
 	Redis          redisCredentials
 	Database       postgresCredentials
 	TDAmeritrade   tdaCredentials
-	TickerConfig   tickerConfiguration
 	AuthedTagUsers authedTaggersConfig
 }
 
@@ -36,10 +35,6 @@ type postgresCredentials struct {
 type tdaCredentials struct {
 	RefreshToken string `toml:"refresh_token"`
 	ConsumerKey  string `toml:"consumer_key"`
-}
-
-type tickerConfiguration struct {
-	Channels []string
 }
 
 type authedTaggersConfig struct {

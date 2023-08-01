@@ -1,4 +1,4 @@
-From golang:1.14.6-buster as builder
+From golang:1.18-buster as builder
 
 WORKDIR /go/src/stella/src
 COPY . /go/src/stella

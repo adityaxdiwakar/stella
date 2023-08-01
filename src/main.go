@@ -35,7 +35,6 @@ var (
 	printer           *message.Printer
 	tds               tda.Session
 	fluxS             *flux.Session
-	tickerChannels    []string
 	conf              tomlConfig
 	removableMessages map[string]RemovableMessageStruct
 	tdaGreen          image.Image
@@ -84,19 +83,21 @@ func init() {
 	printer = message.NewPrinter(message.MatchLanguage(conf.Language))
 
 	// intitialize tda lib
-	tds = tda.Session{
-		Refresh:     conf.TDAmeritrade.RefreshToken,
-		ConsumerKey: conf.TDAmeritrade.ConsumerKey,
-		RootUrl:     "https://api.tdameritrade.com/v1",
-	}
-	tds.InitSession()
+	if conf.EnableTDA {
+		tds = tda.Session{
+			Refresh:     conf.TDAmeritrade.RefreshToken,
+			ConsumerKey: conf.TDAmeritrade.ConsumerKey,
+			RootUrl:     "https://api.tdameritrade.com/v1",
+		}
+		tds.InitSession()
 
-	fluxS, err = flux.New(tds, conf.FluxLogging)
-	if err != nil {
-		log.Fatal(err)
-	}
+		fluxS, err = flux.New(tds, conf.FluxLogging)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	go fluxS.Open()
+		go fluxS.Open()
+	}
 
 	removableMessages = make(map[string]RemovableMessageStruct)
 
@@ -120,13 +121,6 @@ func main() {
 
 	dg.AddHandler(messageCreate)
 	dg.AddHandler(reactionHandler)
-
-	if conf.Ticker {
-		go channelTicker(dg)
-		go playingTicker(dg)
-	} else {
-		fmt.Println("Non-Default Boot: Ticker Feature Disabled")
-	}
 
 	err = dg.Open()
 	if err != nil {
